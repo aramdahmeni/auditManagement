@@ -1,18 +1,22 @@
-import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import Sidebar from "./components/sidebar/sidebar";
 import List from "./components/auditList/list";
-import selectedAudit from "./components/selectedAudit/selectedAudit";
+import SelectedAudit from "./components/selectedAudit/selectedAudit";
+import Sidebar from "./components/sidebar/sidebar";
 
 function App() {
   return (
     <Router>
-      <div>
-        <Sidebar />
-        <Routes>
-          <Route path="/" element={<List />} />
-          <Route path="/selected" element={<selectedAudit />} />
-        </Routes>
+      <div style={{ display: 'flex' }}>
+        <Sidebar /> 
+        <div style={{ flex: 1 }}>
+          <Routes>
+      
+            <Route path="/" element={<List />} />
+
+        
+            <Route path="/audit/:id" element={<SelectedAudit />} />
+          </Routes>
+        </div>
       </div>
     </Router>
   );

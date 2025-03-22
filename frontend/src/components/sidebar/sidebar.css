@@ -4,7 +4,7 @@
   color: white;
   padding: 20px;
   height: 100vh; /* Full height */
-  position: fixed; /* Fixed position */
+  position: fixed; 
   top: 0;
   left: 0;
 }
@@ -26,10 +26,10 @@
 }
 
 .sidebar ul li:hover {
-  background-color: #334155; /* Hover effect */
+  background-color: #334155;
 }
 
 .sidebar ul .active {
   font-weight: bold;
-  color: #38bdf8; /* Active link color */
+  color: #38bdf8; 
 }
