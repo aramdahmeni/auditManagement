@@ -1,0 +1,35 @@
+.sidebar {
+  width: 200px; /* Fixed width */
+  background: #1f2937; /* Dark background */
+  color: white;
+  padding: 20px;
+  height: 100vh; /* Full height */
+  position: fixed; /* Fixed position */
+  top: 0;
+  left: 0;
+}
+
+.sidebar h2 {
+  font-size: 1.3rem;
+  margin-bottom: 15px;
+}
+
+.sidebar ul {
+  list-style: none;
+  padding: 0;
+}
+
+.sidebar ul li {
+  padding: 10px;
+  cursor: pointer;
+  transition: 0.3s ease-in-out;
+}
+
+.sidebar ul li:hover {
+  background-color: #334155; /* Hover effect */
+}
+
+.sidebar ul .active {
+  font-weight: bold;
+  color: #38bdf8; /* Active link color */
+}

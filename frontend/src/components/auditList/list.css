@@ -1,0 +1,67 @@
+.list-container {
+  padding: 20px;
+  background: white;
+  min-height: 100vh; /* Full height */
+  margin-left: 0; /* Remove margin-left */
+  width: calc(100% - 200px); /* Take up remaining space */
+  position: fixed; /* Fix the container to the right */
+  left: 200px; /* Align with the sidebar */
+  top: 0;
+  overflow-x: auto; /* Enable horizontal scrolling if needed */
+}
+
+.list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.sort-button {
+  background: #4f46e5;
+  color: white;
+  border: none;
+  padding: 8px 15px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.sort-button:hover {
+  background: #4338ca;
+}
+
+.audit-table {
+  width: 100%; /* Take up full width of its container */
+  min-width: 1000px; /* Make the table wider */
+  border-collapse: collapse;
+  font-size: 16px;
+}
+
+.audit-table th,
+.audit-table td {
+  padding: 12px;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+}
+
+.audit-table tbody tr:hover {
+  background: #f8f9fa;
+}
+
+.status {
+  padding: 5px 10px;
+  border-radius: 20px;
+  color: white;
+  font-size: 14px;
+}
+
+.ongoing {
+  background: #22c55e;
+}
+
+.completed {
+  background: #ef4444;
+}

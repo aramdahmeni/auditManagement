@@ -1,12 +1,19 @@
+import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import AuditList from "./auditList/list"; // Make sure it's correctly exported
+import Sidebar from "./components/sidebar/sidebar";
+import List from "./components/auditList/list";
+import selectedAudit from "./components/selectedAudit/selectedAudit";
 
 function App() {
   return (
     <Router>
-      <Routes>
-        <Route path="/" element={<AuditList />} /> 
-      </Routes>
+      <div>
+        <Sidebar />
+        <Routes>
+          <Route path="/" element={<List />} />
+          <Route path="/selected" element={<selectedAudit />} />
+        </Routes>
+      </div>
     </Router>
   );
 }
