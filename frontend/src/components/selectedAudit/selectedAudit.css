@@ -1,0 +1,53 @@
+/* SelectedAudit.css */
+.selected-audit-container {
+    background-color: #f9f9f9;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
+    margin-top: 20px;
+  }
+  
+  .audit-details {
+    background-color: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0px 2px 6px rgba(0, 0, 0, 0.1);
+  }
+  
+  .audit-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+  
+  .audit-header h2 {
+    font-size: 1.5rem;
+    font-weight: 600;
+  }
+  
+  .audit-info p {
+    font-size: 1rem;
+    margin: 10px 0;
+  }
+  
+  .status {
+    padding: 5px 10px;
+    border-radius: 12px;
+    color: white;
+  }
+  
+  .status.ongoing {
+    background-color: #22c55e;
+  }
+  
+  .status.completed {
+    background-color: #ef4444;
+  }
+  
+  .error {
+    color: red;
+    font-weight: bold;
+    text-align: center;
+  }
+  
