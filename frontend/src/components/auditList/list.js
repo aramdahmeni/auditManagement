@@ -3,7 +3,8 @@ import { useNavigate } from "react-router-dom";
 import "./list.css";
 
 export default function List() {
-  const [sortType, setSortType] = useState("status");
+  const [statusFilter, setStatusFilter] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
   const [audits, setAudits] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -28,13 +29,14 @@ export default function List() {
     fetchAudits();
   }, []);
 
-  const sortedAudits = [...audits].sort((a, b) => {
-    if (sortType === "status") {
-      return a[sortType] === b[sortType] ? 0 : a[sortType] === "Ongoing" ? -1 : 1;
-    } else if (sortType === "start" || sortType === "end") {
-      return a[sortType].localeCompare(b[sortType]);
-    }
-    return 0;
+  const filteredAudits = audits.filter((audit) => {
+    return (
+      (statusFilter === "" || audit.status === statusFilter) &&
+      (searchTerm === "" ||
+        audit.objective.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        audit.startDate.includes(searchTerm) ||
+        audit.endDate.includes(searchTerm))
+    );
   });
 
   if (loading) return <div className="list-container">loading...</div>;
@@ -43,33 +45,50 @@ export default function List() {
   return (
     <div className="list-container">
       <h2>All audits</h2>
+      
+
+      <div className="filter-controls">
+        <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+          <option value="">All</option>
+          <option value="Ongoing">Ongoing</option>
+          <option value="Completed">Completed</option>
+          <option value="Pending">Pending</option>
+        </select>
+
+        <div className="search-box">
+          <input
+            type="text"
+            placeholder="🔍 Search for a word or a date..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+      </div>
+
       <table className="audit-table">
         <thead>
           <tr>
             <th>Type</th>
-            <th>objective</th>
+            <th>Objective</th>
             <th>Start Date</th>
             <th>End Date</th>
             <th>Status</th>
           </tr>
         </thead>
         <tbody>
-          {sortedAudits.map((audit) => (
+          {filteredAudits.map((audit) => (
             <tr key={audit._id} onClick={() => navigate(`/audit/${audit._id}`)}>
               <td>{audit.type}</td>
               <td>{audit.objective}</td>
               <td>{new Date(audit.startDate).toLocaleDateString()}</td>
               <td>{new Date(audit.endDate).toLocaleDateString()}</td>
               <td className={`status ${
-  audit.status === "Ongoing"
-    ? "ongoing"
-    : audit.status === "Completed"
-    ? "completed"
-    : "pending"
-}`}>
-  {audit.status}
-</td>
-
+                audit.status === "Ongoing" ? "ongoing" :
+                audit.status === "Completed" ? "completed" :
+                "pending"
+              }`}>
+                {audit.status}
+              </td>
             </tr>
           ))}
         </tbody>

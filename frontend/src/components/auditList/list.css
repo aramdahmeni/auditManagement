@@ -1,43 +1,77 @@
 .list-container {
   padding: 20px;
   background: white;
-  min-height: 100vh; /* Full height */
-  margin-left: 0; /* Remove margin-left */
-  width: calc(100% - 200px); /* Take up remaining space */
-  position: fixed; /* Fix the container to the right */
-  left: 200px; /* Align with the sidebar */
+  min-height: 100vh;
+  margin-left: 0;
+  width: calc(100% - 200px);
+  position: fixed;
+  left: 200px;
   top: 0;
-  overflow-x: auto; /* Enable horizontal scrolling if needed */
+  overflow-x: auto;
 }
 
-.list-header {
+
+.filter-controls {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  gap: 15px;
   margin-bottom: 20px;
-}
-
-.sort-button {
-  background: #4f46e5;
-  color: white;
-  border: none;
-  padding: 8px 15px;
+  padding: 10px;
+  background: #f5f5f5;
   border-radius: 8px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 5px;
+  width: 100%;
+  max-width: 1000px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
-.sort-button:hover {
-  background: #4338ca;
+
+.filter-controls select {
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 14px;
+  background: white;
+  cursor: pointer;
+  transition: all 0.3s;
+  width: 50%; 
+  max-width: 180px; 
 }
+
+.filter-controls select:hover {
+  border-color: #007bff;
+}
+
+.search-box {
+  flex: 1;
+  position: relative;
+}
+
+.search-box input {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 14px;
+  transition: all 0.3s;
+  background-color: white;
+}
+
+.search-box input:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+}
+
 
 .audit-table {
-  width: 100%; /* Take up full width of its container */
-  min-width: 1000px; /* Make the table wider */
+  width: 100%;
+  min-width: 1000px;
   border-collapse: collapse;
   font-size: 16px;
+  background: white;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .audit-table th,
@@ -47,25 +81,35 @@
   border-bottom: 1px solid #ddd;
 }
 
-.audit-table tbody tr:hover {
+.audit-table thead {
   background: #f8f9fa;
 }
 
+.audit-table tbody tr:hover {
+  background: #f1f1f1;
+  transition: background 0.3s;
+}
+
+
 .status {
-  padding: 5px 10px;
-  border-radius: 10px;
+  padding: 6px 12px;
+  border-radius: 12px;
   color: white;
   font-size: 14px;
   font-weight: bold;
+  text-align: center;
+  display: inline-block;
+  min-width: 50px;
 }
 
 .ongoing {
-  color: #d89311;
+  background: #ff9800;
 }
 
 .completed {
-  color: #4bd429;
+  background: #4caf50;
 }
-.pending{
-  color: red;
+
+.pending {
+  background: #f44336;
 }
