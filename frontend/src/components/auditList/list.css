@@ -53,15 +53,19 @@
 
 .status {
   padding: 5px 10px;
-  border-radius: 20px;
+  border-radius: 10px;
   color: white;
   font-size: 14px;
+  font-weight: bold;
 }
 
 .ongoing {
-  background: #22c55e;
+  color: #d89311;
 }
 
 .completed {
-  background: #ef4444;
+  color: #4bd429;
+}
+.pending{
+  color: red;
 }

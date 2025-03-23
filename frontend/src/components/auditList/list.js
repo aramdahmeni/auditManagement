@@ -37,20 +37,20 @@ export default function List() {
     return 0;
   });
 
-  if (loading) return <div className="list-container">Chargement...</div>;
-  if (error) return <div className="list-container">Erreur : {error}</div>;
+  if (loading) return <div className="list-container">loading...</div>;
+  if (error) return <div className="list-container">error : {error}</div>;
 
   return (
     <div className="list-container">
-      <h2>Liste des audits</h2>
+      <h2>All audits</h2>
       <table className="audit-table">
         <thead>
           <tr>
             <th>Type</th>
-            <th>Objectif</th>
-            <th>Début</th>
-            <th>Fin</th>
-            <th>Statut</th>
+            <th>objective</th>
+            <th>Start Date</th>
+            <th>End Date</th>
+            <th>Status</th>
           </tr>
         </thead>
         <tbody>
@@ -60,9 +60,16 @@ export default function List() {
               <td>{audit.objective}</td>
               <td>{new Date(audit.startDate).toLocaleDateString()}</td>
               <td>{new Date(audit.endDate).toLocaleDateString()}</td>
-              <td className={`status ${audit.status === "Ongoing" ? "ongoing" : "completed"}`}>
-                {audit.status}
-              </td>
+              <td className={`status ${
+  audit.status === "Ongoing"
+    ? "ongoing"
+    : audit.status === "Completed"
+    ? "completed"
+    : "pending"
+}`}>
+  {audit.status}
+</td>
+
             </tr>
           ))}
         </tbody>
