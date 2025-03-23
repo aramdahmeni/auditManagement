@@ -10,7 +10,6 @@
   overflow-x: auto;
 }
 
-
 .filter-controls {
   display: flex;
   align-items: center;
@@ -25,7 +24,6 @@
   margin-right: auto;
 }
 
-
 .filter-controls select {
   padding: 8px;
   border: 1px solid #ccc;
@@ -34,8 +32,8 @@
   background: white;
   cursor: pointer;
   transition: all 0.3s;
-  width: 50%; 
-  max-width: 180px; 
+  width: 50%;
+  max-width: 180px;
 }
 
 .filter-controls select:hover {
@@ -63,7 +61,6 @@
   box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
 }
 
-
 .audit-table {
   width: 100%;
   min-width: 1000px;
@@ -90,6 +87,20 @@
   transition: background 0.3s;
 }
 
+.sort-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  display: inline-block;
+  position: relative;
+  font-size: 20px;
+  transition: transform 0.3s ease;
+}
+
+.sort-btn:hover {
+  transform: scale(1.1);
+}
 
 .status {
   padding: 6px 12px;

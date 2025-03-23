@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { FaSortUp, FaSortDown } from "react-icons/fa"; 
 import "./list.css";
 
 export default function List() {
@@ -8,6 +9,7 @@ export default function List() {
   const [audits, setAudits] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [sortOrder, setSortOrder] = useState("asc"); 
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -29,6 +31,18 @@ export default function List() {
     fetchAudits();
   }, []);
 
+  const handleSortChange = () => {
+    const newSortOrder = sortOrder === "asc" ? "desc" : "asc";
+    setSortOrder(newSortOrder);
+    setAudits([...audits].sort((a, b) => {
+      if (newSortOrder === "asc") {
+        return new Date(a.startDate) - new Date(b.startDate);
+      } else {
+        return new Date(b.startDate) - new Date(a.startDate);
+      }
+    }));
+  };
+
   const filteredAudits = audits.filter((audit) => {
     return (
       (statusFilter === "" || audit.status === statusFilter) &&
@@ -45,7 +59,6 @@ export default function List() {
   return (
     <div className="list-container">
       <h2>All audits</h2>
-      
 
       <div className="filter-controls">
         <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
@@ -70,7 +83,12 @@ export default function List() {
           <tr>
             <th>Type</th>
             <th>Objective</th>
-            <th>Start Date</th>
+            <th>
+              Start Date
+              <button className="sort-btn" onClick={handleSortChange}>
+                {sortOrder === "asc" ? <FaSortDown /> : <FaSortUp />}
+              </button>
+            </th>
             <th>End Date</th>
             <th>Status</th>
           </tr>
