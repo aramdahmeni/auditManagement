@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaSortUp, FaSortDown } from "react-icons/fa"; 
+import FullCalendar from "@fullcalendar/react";
+import dayGridPlugin from "@fullcalendar/daygrid";
+import interactionPlugin from "@fullcalendar/interaction";
 import "./list.css";
 
 export default function List() {
@@ -9,7 +12,7 @@ export default function List() {
   const [audits, setAudits] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [sortOrder, setSortOrder] = useState("asc"); 
+  const [sortOrder, setSortOrder] = useState("asc");
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -58,59 +61,80 @@ export default function List() {
 
   return (
     <div className="list-container">
-      <h2>All audits</h2>
+      <h2>All Audits</h2>
 
-      <div className="filter-controls">
-        <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
-          <option value="">All</option>
-          <option value="Ongoing">Ongoing</option>
-          <option value="Completed">Completed</option>
-          <option value="Pending">Pending</option>
-        </select>
-
-        <div className="search-box">
-          <input
-            type="text"
-            placeholder="🔍 Search for a word or a date..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+      <div className="filter-container">
+       
+        <div className="calendar-container">
+          <FullCalendar
+            plugins={[dayGridPlugin, interactionPlugin]}
+            initialView="dayGridMonth"
+            height="300px"
+            events={audits.map((audit) => ({
+              title: audit.objective,
+              date: audit.startDate,
+              backgroundColor: audit.status === "Ongoing" ? "orange" : audit.status === "Completed" ? "green" : "red",
+            }))}
           />
         </div>
-      </div>
 
-      <table className="audit-table">
-        <thead>
-          <tr>
-            <th>Type</th>
-            <th>Objective</th>
-            <th>
-              Start Date
-              <button className="sort-btn" onClick={handleSortChange}>
-                {sortOrder === "asc" ? <FaSortDown /> : <FaSortUp />}
-              </button>
-            </th>
-            <th>End Date</th>
-            <th>Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          {filteredAudits.map((audit) => (
-            <tr key={audit._id} onClick={() => navigate(`/audit/${audit._id}`)}>
-              <td>{audit.type}</td>
-              <td>{audit.objective}</td>
-              <td>{new Date(audit.startDate).toLocaleDateString()}</td>
-              <td>{new Date(audit.endDate).toLocaleDateString()}</td>
-              <td className={`status ${
-                audit.status === "Ongoing" ? "ongoing" :
-                audit.status === "Completed" ? "completed" :
-                "pending"
-              }`}>
-                {audit.status}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+   
+        <div className="filters">
+          <div className="filter-controls">
+            <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+              <option value="">All</option>
+              <option value="Ongoing">Ongoing</option>
+              <option value="Completed">Completed</option>
+              <option value="Pending">Pending</option>
+            </select>
+
+            <div className="search-box">
+              <input
+                type="text"
+                placeholder="🔍 Search for a word or a date..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+          </div>
+
+
+        
+          <table className="audit-table">
+            <thead>
+              <tr>
+                <th>Type</th>
+                <th>Objective</th>
+                <th>
+                  Start Date
+                  <button className="sort-btn" onClick={handleSortChange}>
+                    {sortOrder === "asc" ? <FaSortDown /> : <FaSortUp />}
+                  </button>
+                </th>
+                <th>End Date</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredAudits.map((audit) => (
+                <tr key={audit._id} onClick={() => navigate(`/audit/${audit._id}`)}>
+                  <td>{audit.type}</td>
+                  <td>{audit.objective}</td>
+                  <td>{new Date(audit.startDate).toLocaleDateString()}</td>
+                  <td>{new Date(audit.endDate).toLocaleDateString()}</td>
+                  <td className={`status ${
+                    audit.status === "Ongoing" ? "ongoing" :
+                    audit.status === "Completed" ? "completed" :
+                    "pending"
+                  }`}>
+                    {audit.status}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   );
 }
