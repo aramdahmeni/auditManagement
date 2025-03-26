@@ -1,12 +1,20 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { FaSortUp, FaSortDown, FaCheckCircle, FaClock, FaExclamationTriangle } from "react-icons/fa"; 
+import FullCalendar from "@fullcalendar/react";
+import dayGridPlugin from "@fullcalendar/daygrid";
+import interactionPlugin from "@fullcalendar/interaction";
 import "./list.css";
 
 export default function List() {
-  const [sortType, setSortType] = useState("status");
+  const [statusFilter, setStatusFilter] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
   const [audits, setAudits] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [sortOrder, setSortOrder] = useState("asc");
+  const [hoveredAudit, setHoveredAudit] = useState(null); 
+  const [hoveredDate, setHoveredDate] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -28,14 +36,52 @@ export default function List() {
     fetchAudits();
   }, []);
 
-  const sortedAudits = [...audits].sort((a, b) => {
-    if (sortType === "status") {
-      return a[sortType] === b[sortType] ? 0 : a[sortType] === "Ongoing" ? -1 : 1;
-    } else if (sortType === "start" || sortType === "end") {
-      return a[sortType].localeCompare(b[sortType]);
-    }
-    return 0;
+  const handleSortChange = () => {
+    const newSortOrder = sortOrder === "asc" ? "desc" : "asc";
+    setSortOrder(newSortOrder);
+    setAudits([...audits].sort((a, b) => {
+      if (newSortOrder === "asc") {
+        return new Date(a.startDate) - new Date(b.startDate);
+      } else {
+        return new Date(b.startDate) - new Date(a.startDate);
+      }
+    }));
+  };
+
+  const filteredAudits = audits.filter((audit) => {
+    return (
+      (statusFilter === "" || audit.status === statusFilter) &&
+      (searchTerm === "" ||
+        audit.objective.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        audit.startDate.includes(searchTerm) ||
+        audit.endDate.includes(searchTerm))
+    );
   });
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case "Completed":
+        return "green";
+      case "Ongoing":
+        return "orange";
+      case "Pending":
+        return "#D50000";
+      default:
+        return "gray";
+    }
+  };
+
+  const handleEventHover = (info) => {
+
+    setHoveredAudit(info.event.extendedProps.endDate);
+    setHoveredDate(info.event.start);
+  };
+
+  const handleEventLeave = () => {
+   
+    setHoveredAudit(null);
+    setHoveredDate(null);
+  };
 
   if (loading) return <div className="list-container">loading...</div>;
   if (error) return <div className="list-container">error : {error}</div>;
@@ -47,7 +93,7 @@ export default function List() {
         <thead>
           <tr>
             <th>Type</th>
-            <th>Objective</th>
+            <th>objective</th>
             <th>Start Date</th>
             <th>End Date</th>
             <th>Status</th>
