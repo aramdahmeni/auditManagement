@@ -4,7 +4,7 @@ const AuditSchema = new mongoose.Schema({
   type: { type: String, required: true },
   objective: { type: String, required: true },
   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
-  status: { type: String, enum: ["completed", "ongoing", "pending"], default: "pending" },
+  status: { type: String, enum: ["Completed", "Ongoing", "Pending"], default: "pending" },
   startDate: { type: Date, required: true },
   endDate: { type: Date },
   comment: { type: String },

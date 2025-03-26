@@ -32,10 +32,14 @@ const strengthRoutes = require("./routes/strengthRoutes");
 const sensitivePointRoutes = require("./routes/sensitivePointRoutes");
 const ofiRoutes =  require("./routes/ofiRoutes");
 
+
+
 //  Routes
+app.use('/uploads', express.static('uploads'));
 
 app.use("/api/audit", auditRoutes);
 app.use("/api/task", taskRoutes);
+
 app.use("/api/outcome", outcomeRoutes);
 app.use("/api/sensitivePoint", sensitivePointRoutes);
 app.use("/api/strength", strengthRoutes);

@@ -1,4 +1,8 @@
 const Audit = require("../models/audit");
+const path = require("path");
+
+const multer = require("multer");
+
 
 exports.createAudit = async (req, res) => {
   try {
@@ -32,12 +36,46 @@ exports.getAuditById = async (req, res) => {
   }
 };
 
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, "uploads/");
+  },
+  filename: (req, file, cb) => {
+    cb(null, req.params.id + path.extname(file.originalname)); // Use ID for unique filenames
+  },
+});
+
+const upload = multer({ storage: storage });
 exports.updateAudit = async (req, res) => {
   try {
-    const updatedAudit = await Audit.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    const updateData = { 
+      ...req.body, // This already contains type, objective, status, etc.
+      comment: req.body.comment,  // Ensure comment updates correctly
+    };
+
+    if (req.file) {
+      updateData.document = req.file.path;  // Store document path if file is uploaded
+      console.log("File saved at:", req.file.path);
+    }
+
+    const updatedAudit = await Audit.findByIdAndUpdate(
+      req.params.id,
+      { $set: updateData },  // Use $set to update only specific fields
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedAudit) {
+      return res.status(404).json({ message: "Audit not found" });
+    }
+
     res.json(updatedAudit);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error("Update error:", error);
+    res.status(500).json({ 
+      error: error.message,
+      stack: process.env.NODE_ENV === "development" ? error.stack : undefined
+    });
   }
 };
 

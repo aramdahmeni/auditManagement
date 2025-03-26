@@ -47,7 +47,7 @@ export default function List() {
         <thead>
           <tr>
             <th>Type</th>
-            <th>objective</th>
+            <th>Objective</th>
             <th>Start Date</th>
             <th>End Date</th>
             <th>Status</th>
