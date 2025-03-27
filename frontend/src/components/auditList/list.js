@@ -88,38 +88,138 @@ export default function List() {
 
   return (
     <div className="list-container">
-      <h2>All audits</h2>
-      <table className="audit-table">
-        <thead>
-          <tr>
-            <th>Type</th>
-            <th>objective</th>
-            <th>Start Date</th>
-            <th>End Date</th>
-            <th>Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          {sortedAudits.map((audit) => (
-            <tr key={audit._id} onClick={() => navigate(`/audit/${audit._id}`)}>
-              <td>{audit.type}</td>
-              <td>{audit.objective}</td>
-              <td>{new Date(audit.startDate).toLocaleDateString()}</td>
-              <td>{new Date(audit.endDate).toLocaleDateString()}</td>
-              <td className={`status ${
-  audit.status === "Ongoing"
-    ? "ongoing"
-    : audit.status === "Completed"
-    ? "completed"
-    : "pending"
-}`}>
-  {audit.status}
-</td>
+      <h2>All Audits</h2>
 
+      <div className="calendar-container">
+        <FullCalendar
+          plugins={[dayGridPlugin, interactionPlugin]}
+          initialView="dayGridMonth"
+          height="300px"
+          eventContent={(eventInfo) => {
+            const status = eventInfo.event.extendedProps.status;
+            const objective = eventInfo.event.extendedProps.objective.replace(/^1a\s*/, "");
+
+            let icon;
+            if (status === "Completed") {
+              icon = <FaCheckCircle style={{ color: "white", marginRight: "5px" }} />;
+            } else if (status === "Ongoing") {
+              icon = <FaClock style={{ color: "#FF4500", marginRight: "5px" }} />;
+            } else if (status === "Pending") {
+              icon = <FaExclamationTriangle style={{ color: "#D50000", marginRight: "5px" }} />;
+            }
+
+            return (
+              <div
+                style={{
+                  backgroundColor: getStatusColor(status),
+                  color: "#fff",
+                  padding: "5px",
+                  borderRadius: "5px",
+                  width: "100%",
+                  height: "100%",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: "12px",
+                  fontWeight: "bold",
+                }}
+              >
+                {icon} {objective}
+              </div>
+            );
+          }}
+          events={audits.map((audit) => ({
+            title: "",
+            date: audit.startDate,
+            backgroundColor: getStatusColor(audit.status),
+            borderColor: getStatusColor(audit.status),
+            textColor: "#fff",
+            extendedProps: {
+              objective: audit.objective.replace(/^1a\s*/, ""),
+              type: audit.type,
+              status: audit.status,
+              endDate: audit.endDate,
+            },
+          }))}
+          eventMouseEnter={handleEventHover}
+          eventMouseLeave={handleEventLeave}
+        />
+
+     
+        {hoveredAudit && hoveredDate && (
+          <div
+            className="end-date-box"
+            style={{
+              position: "absolute",
+              top: "20px",
+              left: "50%",
+              transform: "translateX(-50%)",
+              backgroundColor: "rgba(0, 0, 0, 0.8)",
+              color: "white",
+              padding: "10px",
+              borderRadius: "5px",
+              zIndex: 10,
+            }}
+          >
+            <strong>End Date: </strong>
+            {new Date(hoveredAudit).toLocaleDateString()}
+          </div>
+        )}
+      </div>
+
+      <div className="filters">
+        <div className="filter-controls">
+          <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+            <option value="">All</option>
+            <option value="Ongoing">Ongoing</option>
+            <option value="Completed">Completed</option>
+            <option value="Pending">Pending</option>
+          </select>
+
+          <div className="search-box">
+            <input
+              type="text"
+              placeholder="🔍 Search for a word or a date..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+        </div>
+
+        <table className="audit-table">
+          <thead>
+            <tr>
+              <th>Type</th>
+              <th>Objective</th>
+              <th>
+                Start Date
+                <button className="sort-btn" onClick={handleSortChange}>
+                  {sortOrder === "asc" ? <FaSortDown /> : <FaSortUp />}
+                </button>
+              </th>
+              <th>End Date</th>
+              <th>Status</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {filteredAudits.map((audit) => (
+              <tr key={audit._id} onClick={() => navigate(`/audit/${audit._id}`)}>
+                <td>{audit.type}</td>
+                <td>{audit.objective}</td>
+                <td>{new Date(audit.startDate).toLocaleDateString()}</td>
+                <td>{new Date(audit.endDate).toLocaleDateString()}</td>
+                <td className={`status ${
+                  audit.status === "Ongoing" ? "ongoing" :
+                  audit.status === "Completed" ? "completed" :
+                  "pending"
+                }`}>
+                  {audit.status}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

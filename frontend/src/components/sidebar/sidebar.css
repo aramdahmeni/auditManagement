@@ -1,35 +1,114 @@
+/* Global styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Arial', sans-serif;
+  background-color: #f4f4f4;
+}
+
+/* Sidebar styles */
 .sidebar {
-  width: 200px; /* Fixed width */
-  background: #1f2937; /* Dark background */
-  color: white;
-  padding: 20px;
-  height: 100vh; /* Full height */
-  position: fixed; 
+  width: 250px;
+  background-color: #2c3e50;
+  color: #ecf0f1;
+  height: 100vh;
+  position: fixed;
   top: 0;
   left: 0;
+  transition: all 0.3s ease;
+  padding: 20px;
 }
 
 .sidebar h2 {
-  font-size: 1.3rem;
-  margin-bottom: 15px;
+  font-size: 24px;
+  margin-bottom: 20px;
+  color: #ecf0f1;
 }
 
-.sidebar ul {
-  list-style: none;
-  padding: 0;
+/* Main Menu styles */
+nav ul {
+  list-style-type: none;
 }
 
-.sidebar ul li {
+nav ul li {
   padding: 10px;
+  margin: 5px 0;
+  border-radius: 4px;
+  transition: background-color 0.3s;
+}
+
+nav ul li:hover {
+  background-color: #34495e;
+}
+
+nav ul li.disabled {
+  color: #95a5a6;
+  cursor: not-allowed;
+}
+
+nav ul li .menu-toggle {
+  display: flex;
+  align-items: center;
   cursor: pointer;
-  transition: 0.3s ease-in-out;
-}
-
-.sidebar ul li:hover {
-  background-color: #334155;
-}
-
-.sidebar ul .active {
+  justify-content: space-between;
+  font-size: 18px;
   font-weight: bold;
-  color: #38bdf8; 
+  color: #ecf0f1;
+}
+
+.triangle {
+  font-size: 14px;
+  margin-left: 10px;
+  transition: transform 0.3s;
+}
+
+.triangle.up {
+  transform: rotate(180deg);
+}
+
+.submenu {
+  list-style-type: none;
+  padding-left: 20px;
+  margin-top: 10px;
+}
+
+.submenu li {
+  padding: 8px;
+  border-radius: 4px;
+  background-color: #34495e;
+  transition: background-color 0.3s;
+}
+
+.submenu li:hover {
+  background-color: #1abc9c;
+}
+
+/* Add hover effects for main menu */
+nav ul li a {
+  text-decoration: none;
+  color: #ecf0f1;
+  display: block;
+  padding: 10px;
+  transition: background-color 0.3s ease;
+}
+
+nav ul li a:hover {
+  background-color: #1abc9c;
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+  .sidebar {
+    width: 100%;
+    height: auto;
+    position: static;
+  }
+
+  .sidebar h2 {
+    font-size: 20px;
+  }
 }
