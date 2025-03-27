@@ -1,34 +1,23 @@
 import React, { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
-import EditIcon from "@mui/icons-material/Edit";
-import DeleteIcon from "@mui/icons-material/Delete";
-import SaveIcon from "@mui/icons-material/Save";
-import CancelIcon from "@mui/icons-material/Cancel";
-import UploadFileIcon from "@mui/icons-material/UploadFile";
-import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Button,
-} from "@mui/material";
+import { useParams, useNavigate } from "react-router-dom";
+import { FaEdit, FaTrash, FaSave, FaTimes, FaUpload, FaDownload } from "react-icons/fa";
 import "./selectedAudit.css";
 
 export default function SelectedAudit() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [audit, setAudit] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [editedAudit, setEditedAudit] = useState({
-    document: '', 
-    newDocument: null 
+    document: '',
+    newDocument: null
   });
   const [validationError, setValidationError] = useState(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
-  // Get audit
   useEffect(() => {
     const fetchAudit = async () => {
       try {
@@ -41,7 +30,7 @@ export default function SelectedAudit() {
         setEditedAudit({
           ...data,
           newDocument: null
-        }); 
+        });
       } catch (error) {
         setError(error.message);
       } finally {
@@ -62,20 +51,18 @@ export default function SelectedAudit() {
 
   const handleSave = async () => {
     try {
-      // Validate dates
       if (!editedAudit.startDate || !editedAudit.endDate) {
         setValidationError("Both start and end dates are required.");
         setIsDialogOpen(true);
         return;
       }
-  
+
       if (new Date(editedAudit.startDate) > new Date(editedAudit.endDate)) {
         setValidationError("Start date must be before end date.");
         setIsDialogOpen(true);
         return;
       }
-  
-      // Prepare form data
+
       const formData = new FormData();
       formData.append("type", editedAudit.type || "");
       formData.append("objective", editedAudit.objective || "");
@@ -83,35 +70,30 @@ export default function SelectedAudit() {
       formData.append("startDate", editedAudit.startDate);
       formData.append("endDate", editedAudit.endDate);
       formData.append("comment", editedAudit.comment?.trim() || "No comment available");
-  
-      // Handle document upload - CRITICAL FIX
+
       if (editedAudit.newDocument) {
-        // If a new file was uploaded
         formData.append("document", editedAudit.newDocument);
       } else if (editedAudit.document) {
-        // If keeping existing document
         formData.append("documentPath", editedAudit.document);
       } else {
-        // Explicitly send null if document should be removed
         formData.append("documentPath", "");
       }
-  
-      // Send request
+
       const response = await fetch(`http://localhost:5000/api/audit/edit/${id}`, {
         method: "PUT",
         body: formData,
       });
-  
+
       if (!response.ok) {
         const errorText = await response.text();
         throw new Error(`Failed to save audit details: ${errorText}`);
       }
-  
+
       const data = await response.json();
       setAudit(data);
       setEditedAudit({
         ...data,
-        newDocument: null // Clear the uploaded file after successful save
+        newDocument: null
       });
       setIsEditing(false);
       setValidationError(null);
@@ -120,6 +102,7 @@ export default function SelectedAudit() {
       setError(error.message || "An unknown error occurred.");
     }
   };
+
   const handleDeleteClick = () => {
     setDeleteDialogOpen(true);
   };
@@ -129,13 +112,13 @@ export default function SelectedAudit() {
       const response = await fetch(`http://localhost:5000/api/audit/delete/${id}`, {
         method: "DELETE",
       });
-  
+
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || "Failed to delete audit");
       }
-  
-      window.location.href = "/";
+
+      navigate("/");
     } catch (error) {
       console.error("Delete error:", error);
       setError(error.message);
@@ -178,200 +161,231 @@ export default function SelectedAudit() {
   const handleRemoveDocument = () => {
     setEditedAudit(prev => ({
       ...prev,
-      document: '', // Clear the path
-      newDocument: null // Clear any uploaded file
+      document: '',
+      newDocument: null
     }));
   };
 
   const handleCloseDialog = () => {
-    setIsDialogOpen(false); 
+    setIsDialogOpen(false);
   };
 
-  if (loading) return <div className="loading">Loading...</div>;
-  if (error) return <div className="error">Error: {error}</div>;
+  if (loading) return <div className="loading-state">Loading...</div>;
+  if (error) return <div className="error-state">Error: {error}</div>;
 
   return (
     <div className="selected-audit-container">
-      <h2 className="audit-header">Audit Details</h2>
+      <div className="audit-header">
+        <h2>Audit Details</h2>
+      </div>
 
       <div className="audit-form">
         <div className="audit-column">
-          <label>Audit Type</label>
-          <input
-            type="text"
-            name="type"
-            value={editedAudit.type || ""}
-            onChange={handleChange}
-            readOnly={!isEditing}
-          />
-          <label>Start Date</label>
-          {isEditing ? (
-            <input
-              type="date"
-              name="startDate"
-              value={editedAudit.startDate ? editedAudit.startDate.split('T')[0] : ""}
-              onChange={handleChange}
-            />
-          ) : (
+          <div className="form-group">
+            <label>Audit Type</label>
             <input
               type="text"
-              value={new Date(editedAudit.startDate).toLocaleDateString()}
-              readOnly
+              name="type"
+              value={editedAudit.type || ""}
+              onChange={handleChange}
+              readOnly={!isEditing}
+              className={!isEditing ? "read-only" : ""}
             />
-          )}
-          <label>Created By</label>
-          <input
-            type="text"
-            name="createdBy"
-            value={editedAudit.createdBy?.username || ""}
-            readOnly
-          />
-          <label>Comments</label>
-          <input
-            type="text"
-            name="comment"
-            value={editedAudit.comment || "No comment available"}
-            onChange={handleChange}
-            readOnly={!isEditing}
-          />
+          </div>
+
+          <div className="form-group">
+            <label>Start Date</label>
+            {isEditing ? (
+              <input
+                type="date"
+                name="startDate"
+                value={editedAudit.startDate ? editedAudit.startDate.split('T')[0] : ""}
+                onChange={handleChange}
+              />
+            ) : (
+              <input
+                type="text"
+                value={new Date(editedAudit.startDate).toLocaleDateString()}
+                readOnly
+                className="read-only"
+              />
+            )}
+          </div>
+
+          <div className="form-group">
+            <label>Created By</label>
+            <input
+              type="text"
+              name="createdBy"
+              value={editedAudit.createdBy?.username || ""}
+              readOnly
+              className="read-only"
+            />
+          </div>
+
+          <div className="form-group">
+            <label>Comments</label>
+            <textarea
+              name="comment"
+              value={editedAudit.comment || "No comment available"}
+              onChange={handleChange}
+              readOnly={!isEditing}
+              className={!isEditing ? "read-only" : ""}
+              rows="3"
+            />
+          </div>
         </div>
 
         <div className="audit-column">
-          <label>Objective</label>
-          <input
-            type="text"
-            name="objective"
-            value={editedAudit.objective || ""}
-            onChange={handleChange}
-            readOnly={!isEditing}
-          />
-          <label>End Date</label>
-          {isEditing ? (
-            <input
-              type="date"
-              name="endDate"
-              value={editedAudit.endDate ? editedAudit.endDate.split('T')[0] : ""}
+          <div className="form-group">
+            <label>Objective</label>
+            <textarea
+              name="objective"
+              value={editedAudit.objective || ""}
               onChange={handleChange}
+              readOnly={!isEditing}
+              className={!isEditing ? "read-only" : ""}
+              rows="3"
             />
-          ) : (
-            <input
-              type="text"
-              value={editedAudit.endDate ? new Date(editedAudit.endDate).toLocaleDateString() : ""}
-              readOnly
-            />
-          )}
-          <label>Status</label>
-          {isEditing ? (
-            <select
-              name="status"
-              value={editedAudit.status} 
-              onChange={handleChange}
-            >
-              <option value="Pending">Pending</option>
-              <option value="Ongoing">Ongoing</option>
-              <option value="Completed">Completed</option>
-            </select>
-          ) : (
-            <input
-              type="text"
-              value={editedAudit.status || ""}
-              readOnly
-            />
-          )}
-          <label>Documents</label>
-          {isEditing ? (
-            <div className="file-upload-container">
-              <div className="file-upload">
-                <input
-                  type="file"
-                  onChange={handleFileUpload}
-                  id="file-upload-input"
-                />
-                <label htmlFor="file-upload-input">
-                  <UploadFileIcon />
-                  <span>
-                    {editedAudit.newDocument 
-                      ? editedAudit.newDocument.name 
-                      : "Select new file"}
-                  </span>
-                </label>
-              </div>
-              {editedAudit.document && !editedAudit.newDocument && (
-                <div className="file-info">
-                  <span>Current file: {editedAudit.document.split('/').pop()}</span>
-                  <button 
-                    type="button" 
-                    className="remove-file-button"
-                    onClick={handleRemoveDocument}
-                  >
-                    Remove
-                  </button>
-                </div>
-              )}
-            </div>
-          ) : editedAudit.document ? (
-            <a
-  href={`http://localhost:5000/${editedAudit.document}`}
-  download={editedAudit.document.split('/').pop()} // Sets the filename
-  className="document-link"
->
-  Download Document ({editedAudit.document.split('/').pop()})
-</a>
+          </div>
 
-          ) : (
-            <input
-              type="text"
-              value="No document available"
-              readOnly
-            />
-          )}
+          <div className="form-group">
+            <label>End Date</label>
+            {isEditing ? (
+              <input
+                type="date"
+                name="endDate"
+                value={editedAudit.endDate ? editedAudit.endDate.split('T')[0] : ""}
+                onChange={handleChange}
+              />
+            ) : (
+              <input
+                type="text"
+                value={editedAudit.endDate ? new Date(editedAudit.endDate).toLocaleDateString() : ""}
+                readOnly
+                className="read-only"
+              />
+            )}
+          </div>
+
+          <div className="form-group">
+            <label>Status</label>
+            {isEditing ? (
+              <select
+                name="status"
+                value={editedAudit.status}
+                onChange={handleChange}
+              >
+                <option value="Pending">Pending</option>
+                <option value="Ongoing">Ongoing</option>
+                <option value="Completed">Completed</option>
+              </select>
+            ) : (
+              <div className={`status-text ${editedAudit.status?.toLowerCase()}`}>
+                {editedAudit.status || ""}
+              </div>
+            )}
+          </div>
+
+          <div className="form-group">
+            <label>Documents</label>
+            {isEditing ? (
+              <div className="file-upload-container">
+                <div className="file-upload">
+                  <input
+                    type="file"
+                    onChange={handleFileUpload}
+                    id="file-upload-input"
+                  />
+                  <label htmlFor="file-upload-input" className="upload-button">
+                    <FaUpload className="icon" />
+                    <span>
+                      {editedAudit.newDocument
+                        ? editedAudit.newDocument.name
+                        : "Select new file"}
+                    </span>
+                  </label>
+                </div>
+                {editedAudit.document && !editedAudit.newDocument && (
+                  <div className="file-info">
+                    <span>Current file: {editedAudit.document.split('/').pop()}</span>
+                    <button
+                      type="button"
+                      className="remove-file-button"
+                      onClick={handleRemoveDocument}
+                    >
+                      Remove
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : editedAudit.document ? (
+              <a
+                href={`http://localhost:5000/${editedAudit.document}`}
+                download={editedAudit.document.split('/').pop()}
+                className="document-link"
+              >
+                <FaDownload className="icon" />
+                {editedAudit.document.split('/').pop()}
+              </a>
+            ) : (
+              <div className="no-document">No document available</div>
+            )}
+          </div>
         </div>
       </div>
 
-      <div className="audit-buttons">
+      <div className="action-buttons">
         {isEditing ? (
           <>
-            <button className="save-button" onClick={handleSave}>
-              <SaveIcon /> Save
+            <button className="btn save-btn" onClick={handleSave}>
+              <FaSave className="icon" /> Save
             </button>
-            <button className="cancel-button" onClick={handleCancel}>
-              <CancelIcon /> Cancel
+            <button className="btn cancel-btn" onClick={handleCancel}>
+              <FaTimes className="icon" /> Cancel
             </button>
           </>
         ) : (
           <>
-            <button className="edit-button" onClick={handleEdit}>
-              <EditIcon /> Edit
+            <button className="btn edit-btn" onClick={handleEdit}>
+              <FaEdit className="icon" /> Edit
             </button>
-            <button className="delete-button" onClick={handleDeleteClick}>
-              <DeleteIcon /> Delete
+            <button className="btn delete-btn" onClick={handleDeleteClick}>
+              <FaTrash className="icon" /> Delete
             </button>
           </>
         )}
       </div>
 
-      <Dialog open={isDialogOpen} onClose={handleCloseDialog}>
-        <DialogTitle>Validation Error</DialogTitle>
-        <DialogContent>
-          <p>{validationError}</p>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseDialog} color="primary">
-            OK
-          </Button>
-        </DialogActions>
-      </Dialog>
+      {/* Dialogs */}
+      <div className={`dialog-overlay ${isDialogOpen || deleteDialogOpen ? 'active' : ''}`}>
+        {isDialogOpen && (
+          <div className="dialog">
+            <h3>Validation Error</h3>
+            <p>{validationError}</p>
+            <div className="dialog-actions">
+              <button className="btn primary-btn" onClick={handleCloseDialog}>
+                OK
+              </button>
+            </div>
+          </div>
+        )}
 
-      <Dialog open={deleteDialogOpen} onClose={handleDeleteCancel}>
-        <DialogTitle>Confirm Deletion</DialogTitle>
-        <DialogContent>
-          <p>Are you sure you want to delete this audit? This action cannot be undone.</p>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleDeleteCancel}>Cancel</Button>
-          <Button onClick={handleDeleteConfirm} color="error">Delete</Button>
-        </DialogActions>
-      </Dialog>
+        {deleteDialogOpen && (
+          <div className="dialog">
+            <h3>Confirm Deletion</h3>
+            <p>Are you sure you want to delete this audit? This action cannot be undone.</p>
+            <div className="dialog-actions">
+              <button className="btn cancel-btn" onClick={handleDeleteCancel}>
+                Cancel
+              </button>
+              <button className="btn delete-btn" onClick={handleDeleteConfirm}>
+                Delete
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

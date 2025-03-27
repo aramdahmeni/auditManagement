@@ -2,12 +2,49 @@ const Audit = require("../models/audit");
 const path = require("path");
 
 const multer = require("multer");
+const mongoose = require("mongoose");
+const gridfsStream = require("gridfs-stream");
+const { GridFsStorage } = require("multer-gridfs-storage");
+
+const mongoURI = "mongodb+srv://aramdahmeni10:admin@project.tojmv.mongodb.net/project?retryWrites=true&w=majority&appName=project";
+
+const conn = mongoose.connection;
+let gfs;
+
+conn.once("open", () => {
+  gfs = gridfsStream(conn.db, mongoose.mongo);
+  gfs.collection("uploads");
+});
+
+const storage = new GridFsStorage({
+  url: mongoURI,
+  file: (req, file) => {
+    return new Promise((resolve, reject) => {
+      const filename = Date.now() + "_" + file.originalname;
+      const fileInfo = {
+        filename: filename,
+        bucketName: "uploads", // Must match GridFS collection
+      };
+      resolve(fileInfo);
+    });
+  },
+});
+const upload = multer({ storage });
+
 
 
 exports.createAudit = async (req, res) => {
   try {
-    const { type, objective, createdBy, status, startDate, endDate, comment, document } = req.body;
-    const newAudit = new Audit({ type, objective, createdBy, status, startDate, endDate, comment, document });
+    const { type, objective, createdBy, status, startDate, endDate, comment } = req.body;
+
+    let documentId = null; 
+    if (req.file) {
+      documentId = req.file.id;
+    }
+
+    const newAudit = new Audit({ 
+      type, objective, createdBy, status, startDate, endDate, comment, document: documentId 
+    });
 
     await newAudit.save();
     res.status(201).json({ message: "Audit created successfully", audit: newAudit });
@@ -15,6 +52,7 @@ exports.createAudit = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
 
 exports.getAllAudits = async (req, res) => {
   try {
@@ -37,50 +75,53 @@ exports.getAuditById = async (req, res) => {
 };
 
 
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, "uploads/");
-  },
-  filename: (req, file, cb) => {
-    cb(null, req.params.id + path.extname(file.originalname)); // Use ID for unique filenames
-  },
-});
 
-const upload = multer({ storage: storage });
+
 exports.updateAudit = async (req, res) => {
   try {
-    const updateData = { 
-      ...req.body, // This already contains type, objective, status, etc.
-      comment: req.body.comment,  // Ensure comment updates correctly
-    };
+    const audit = await Audit.findById(req.params.id);
+    if (!audit) return res.status(404).json({ message: "Audit not found" });
 
+    const updateData = { ...req.body };
+
+    // Handle document update
     if (req.file) {
-      updateData.document = req.file.path;  // Store document path if file is uploaded
-      console.log("File saved at:", req.file.path);
+      console.log("New file uploaded:", req.file);
+
+      // If using GridFS, delete old file
+      if (audit.document && gfs) {
+        try {
+          await gfs.files.deleteOne({ _id: audit.document });
+          console.log("Previous document deleted:", audit.document);
+        } catch (err) {
+          console.error("Error deleting previous document:", err);
+        }
+      }
+
+      // Save new document reference
+      updateData.document = req.file.id || req.file.filename;
     }
 
-    const updatedAudit = await Audit.findByIdAndUpdate(
-      req.params.id,
-      { $set: updateData },  // Use $set to update only specific fields
-      { new: true, runValidators: true }
-    );
+    const updatedAudit = await Audit.findByIdAndUpdate(req.params.id, updateData, { new: true });
 
-    if (!updatedAudit) {
-      return res.status(404).json({ message: "Audit not found" });
-    }
-
-    res.json(updatedAudit);
+    res.status(200).json({ message: "Audit updated successfully", audit: updatedAudit });
   } catch (error) {
-    console.error("Update error:", error);
-    res.status(500).json({ 
-      error: error.message,
-      stack: process.env.NODE_ENV === "development" ? error.stack : undefined
-    });
+    console.error("Error updating audit:", error);
+    res.status(500).json({ error: error.message });
   }
 };
 
+
 exports.deleteAudit = async (req, res) => {
   try {
+    const audit = await Audit.findById(req.params.id);
+    if (!audit) return res.status(404).json({ message: "Audit not found" });
+
+    // Delete file from GridFS
+    if (audit.document) {
+      await gfs.files.deleteOne({ _id: audit.document });
+    }
+
     await Audit.findByIdAndDelete(req.params.id);
     res.json({ message: "Audit deleted successfully" });
   } catch (error) {

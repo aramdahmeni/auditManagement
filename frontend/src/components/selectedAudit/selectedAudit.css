@@ -1,130 +1,319 @@
+/* selectedAudit.css - Matching List Design */
+:root {
+  --primary-color: #4361ee;
+  --secondary-color: #3f37c9;
+  --success-color: #4cc9f0;
+  --warning-color: #f8961e;
+  --danger-color: #f94144;
+  --light-gray: #f8f9fa;
+  --medium-gray: #e9ecef;
+  --dark-gray: #6c757d;
+  --text-color: #212529;
+  --border-radius: 8px;
+  --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  --transition: all 0.3s ease;
+}
+
 .selected-audit-container {
-  width: 850px;
-  margin: auto;
-  padding: 30px;
-  background: #ffffff;
-  border-radius: 12px;
-  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+  padding: 2rem;
+  background-color: #f5f7fa;
+  min-height: 100vh;
+  width: calc(100% - 250px);
+  margin-left: 250px;
+  position: relative;
 }
 
 .audit-header {
-  text-align: center;
-  font-size: 24px;
-  font-weight: bold;
-  margin-bottom: 20px;
-  color: #333;
+  margin-bottom: 2rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--medium-gray);
+}
+
+.audit-header h2 {
+  color: var(--text-color);
+  font-size: 1.75rem;
+  font-weight: 600;
+  position: relative;
+}
+
+.audit-header h2::after {
+  content: '';
+  position: absolute;
+  bottom: -0.75rem;
+  left: 0;
+  width: 60px;
+  height: 3px;
+  background: var(--primary-color);
 }
 
 .audit-form {
   display: flex;
-  justify-content: space-between;
-  gap: 30px;
+  gap: 2rem;
+  background: white;
+  padding: 2rem;
+  border-radius: var(--border-radius);
+  box-shadow: var(--box-shadow);
+  margin-bottom: 1.5rem;
 }
 
 .audit-column {
   flex: 1;
   display: flex;
   flex-direction: column;
+  gap: 1.5rem;
 }
 
-.audit-column label {
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.form-group label {
+  font-weight: 500;
+  color: var(--dark-gray);
+  font-size: 0.9rem;
+}
+
+input, select, textarea {
+  padding: 0.75rem;
+  border: 1px solid var(--medium-gray);
+  border-radius: var(--border-radius);
+  font-size: 0.9rem;
+  transition: var(--transition);
+}
+
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
+}
+
+.read-only {
+  background-color: var(--light-gray);
+  cursor: not-allowed;
+  border-color: var(--light-gray);
+}
+
+textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.status-text {
+  padding: 0.5rem;
   font-weight: 600;
-  margin-top: 10px;
-  color: #444;
+  text-transform: uppercase;
+  font-size: 0.85rem;
 }
 
-.audit-column input {
-  width: 100%;
-  padding: 10px;
-  font-size: 15px;
-  margin-top: 5px;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  background-color: #f9f9f9;
-  color: #333;
+.status-text.pending {
+  color: var(--danger-color);
 }
 
-.audit-buttons {
+.status-text.ongoing {
+  color: var(--warning-color);
+}
+
+.status-text.completed {
+  color: var(--success-color);
+}
+
+.file-upload-container {
   display: flex;
-  justify-content: center;
-  gap: 15px;
-  margin-top: 25px;
-}
-
-.edit-button,
-.delete-button {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 16px;
-  font-size: 15px;
-  font-weight: 600;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.3s ease-in-out;
-}
-
-.edit-button {
-  background-color: #4CAF50;
-  color: white;
-}
-
-.edit-button:hover {
-  background-color: #45a049;
-}
-
-.delete-button {
-  background-color: #dc3545;
-  color: white;
-}
-
-.delete-button:hover {
-  background-color: #b92d3c;
-}
-
-.loading,
-.error {
-  text-align: center;
-  font-size: 16px;
-  color: #666;
-  margin-top: 20px;
-}
-select {
-  width: 100%;
-  padding: 8px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-}
-
-input[type="date"] {
-  width: 100%;
-  padding: 8px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-}
-
-.file-upload {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
 .file-upload input[type="file"] {
-  display: none; 
+  display: none;
 }
 
-.file-upload span {
-  font-size: 14px;
-  color: #555;
-}.audit-column input,
-.audit-column select {
+.upload-button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  background-color: var(--light-gray);
+  border: 1px dashed var(--medium-gray);
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.upload-button:hover {
+  border-color: var(--primary-color);
+  background-color: rgba(67, 97, 238, 0.05);
+}
+
+.file-info {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.85rem;
+  color: var(--dark-gray);
+}
+
+.remove-file-button {
+  background: none;
+  border: none;
+  color: var(--danger-color);
+  cursor: pointer;
+  font-size: 0.8rem;
+  padding: 0.25rem 0.5rem;
+}
+
+.remove-file-button:hover {
+  text-decoration: underline;
+}
+
+.document-link {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--primary-color);
+  text-decoration: none;
+  transition: var(--transition);
+}
+
+.document-link:hover {
+  text-decoration: underline;
+}
+
+.no-document {
+  color: var(--dark-gray);
+  font-style: italic;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  border-radius: var(--border-radius);
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--transition);
+  border: none;
+}
+
+.btn .icon {
+  font-size: 0.9rem;
+}
+
+.edit-btn {
+  background-color: var(--primary-color);
+  color: white;
+}
+
+.edit-btn:hover {
+  background-color: var(--secondary-color);
+}
+
+.delete-btn {
+  background-color: var(--danger-color);
+  color: white;
+}
+
+.delete-btn:hover {
+  background-color: #d32f2f;
+}
+
+.save-btn {
+  background-color: var(--success-color);
+  color: white;
+}
+
+.save-btn:hover {
+  background-color: #00acc1;
+}
+
+.cancel-btn {
+  background-color: var(--medium-gray);
+  color: var(--text-color);
+}
+
+.cancel-btn:hover {
+  background-color: #cfd8dc;
+}
+
+.dialog-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  opacity: 0;
+  visibility: hidden;
+  transition: var(--transition);
+}
+
+.dialog-overlay.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+.dialog {
+  background: white;
+  border-radius: var(--border-radius);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
   width: 100%;
-  padding: 10px;
-  font-size: 15px;
-  margin-top: 5px;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  background-color: #f9f9f9;
-  color: #333;
+  max-width: 400px;
+  padding: 1.5rem;
+}
+
+.dialog h3 {
+  margin-top: 0;
+  color: var(--text-color);
+}
+
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.primary-btn {
+  background-color: var(--primary-color);
+  color: white;
+}
+
+.loading-state, .error-state {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 200px;
+  background: white;
+  border-radius: var(--border-radius);
+  box-shadow: var(--box-shadow);
+  font-size: 1rem;
+}
+
+.error-state {
+  color: var(--danger-color);
+}
+
+@media (max-width: 768px) {
+  .selected-audit-container {
+    width: 100%;
+    margin-left: 0;
+    padding: 1rem;
+  }
+
+  .audit-form {
+    flex-direction: column;
+    padding: 1rem;
+  }
 }

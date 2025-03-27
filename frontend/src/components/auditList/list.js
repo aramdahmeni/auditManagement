@@ -72,13 +72,11 @@ export default function List() {
   };
 
   const handleEventHover = (info) => {
-
     setHoveredAudit(info.event.extendedProps.endDate);
     setHoveredDate(info.event.start);
   };
 
   const handleEventLeave = () => {
-   
     setHoveredAudit(null);
     setHoveredDate(null);
   };
@@ -100,22 +98,21 @@ export default function List() {
           </tr>
         </thead>
         <tbody>
-          {sortedAudits.map((audit) => (
+          {filteredAudits.map((audit) => (
             <tr key={audit._id} onClick={() => navigate(`/audit/${audit._id}`)}>
               <td>{audit.type}</td>
               <td>{audit.objective}</td>
               <td>{new Date(audit.startDate).toLocaleDateString()}</td>
               <td>{new Date(audit.endDate).toLocaleDateString()}</td>
               <td className={`status ${
-  audit.status === "Ongoing"
-    ? "ongoing"
-    : audit.status === "Completed"
-    ? "completed"
-    : "pending"
-}`}>
-  {audit.status}
-</td>
-
+                audit.status === "Ongoing"
+                  ? "ongoing"
+                  : audit.status === "Completed"
+                  ? "completed"
+                  : "pending"
+              }`}>
+                {audit.status}
+              </td>
             </tr>
           ))}
         </tbody>
