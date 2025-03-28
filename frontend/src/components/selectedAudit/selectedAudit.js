@@ -77,10 +77,7 @@ export default function SelectedAudit() {
 
       const response = await fetch(`http://localhost:5000/api/audit/edit/${id}`, {
         method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(updatedData),
+        body: formData, // Changed from JSON.stringify(updatedData) to formData
       });
 
       if (!response.ok) {
@@ -103,6 +100,10 @@ export default function SelectedAudit() {
 
   const handleDeleteClick = () => {
     setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteCancel = () => { // Added this missing function
+    setDeleteDialogOpen(false);
   };
 
   const handleDeleteConfirm = async () => {
@@ -135,7 +136,7 @@ export default function SelectedAudit() {
     const file = e.target.files[0];
     if (file) {
       console.log("Selected file:", file); 
-      setEditedAudit({ ...editedAudit, document: file }); 
+      setEditedAudit({ ...editedAudit, newDocument: file }); // Changed from document to newDocument
     }
   };
 

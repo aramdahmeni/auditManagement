@@ -11,14 +11,14 @@ const mongoURI = "mongodb+srv://aramdahmeni10:admin@project.tojmv.mongodb.net/pr
 // GridFS Storage Setup
 const storage = new GridFsStorage({
   url: mongoURI,
-  options: { useNewUrlParser: true, useUnifiedTopology: true }, // ✅ Ensure options are passed
   file: (req, file) => {
     return {
-      filename: `${Date.now()}_${file.originalname}`, // Ensure unique filenames
+      filename: `${Date.now()}_${file.originalname}`, // Unique filename
       bucketName: "uploads", // Must match GridFS collection
     };
   },
 });
+
 
 const upload = multer({ storage });
 

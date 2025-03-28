@@ -1,0 +1,54 @@
+/* calendar.css */
+.calendar-wrapper {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    padding: 20px 10px;
+    margin-top: 10px;
+  }
+  
+  .compact-calendar {
+    width: 90%;
+    max-width: 800px;
+    margin: 0 auto;
+    font-size: 0.9em;
+  }
+  
+  .fc {
+    font-family: inherit;
+  }
+  
+  .fc-toolbar-title {
+    font-size: 1.2em;
+    font-weight: 600;
+  }
+  
+  .fc-button {
+    background-color: #f8f9fa;
+    border: 1px solid #ddd;
+    color: #333;
+    padding: 0.3em 0.6em;
+  }
+  
+  .fc-button:hover {
+    background-color: #e9ecef;
+  }
+  
+  .fc-daygrid-event {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    padding: 2px 4px;
+    margin-bottom: 2px;
+    font-size: 0.8em;
+  }
+  
+  .loading, .error {
+    text-align: center;
+    padding: 20px;
+    color: #666;
+  }
+  
+  .error {
+    color: #d9534f;
+  }

@@ -1,9 +1,14 @@
-import React from "react";
-import { FaTachometerAlt, FaClipboardList, FaChevronRight } from "react-icons/fa";
+import React, { useState } from "react";
+import { FaTachometerAlt, FaClipboardList, FaCalendarAlt, FaChevronRight, FaChevronDown } from "react-icons/fa";
+import { Link } from "react-router-dom";
 import "./sidebar.css";
 
 export default function Sidebar() {
-  const [isOpen, setIsOpen] = useState(false);
+  const [isAuditListOpen, setIsAuditListOpen] = useState(false);
+
+  const toggleAuditList = () => {
+    setIsAuditListOpen(!isAuditListOpen);
+  };
 
   return (
     <aside className="sidebar">
@@ -26,11 +31,25 @@ export default function Sidebar() {
         <div className="nav-section">
           <h3 className="nav-title">Services</h3>
           <ul>
-            <li className="active">
+            <li className={`${isAuditListOpen ? 'active' : ''}`} onClick={toggleAuditList}>
+            <Link to="/audits" className="nav-link">
               <FaClipboardList className="nav-icon" />
               <span>Audit List</span>
-              <FaChevronRight className="nav-arrow" />
+              {isAuditListOpen ? (
+                <FaChevronDown className="nav-arrow" />
+              ) : (
+                <FaChevronRight className="nav-arrow" />
+              )}
+              </Link>
             </li>
+            {isAuditListOpen && (
+              <li className="dropdown-item">
+                <Link to="/calendar" className="nav-link">
+                  <FaCalendarAlt className="nav-icon" />
+                  <span>Calendar</span>
+                </Link>
+              </li>
+            )}
           </ul>
         </div>
       </nav>

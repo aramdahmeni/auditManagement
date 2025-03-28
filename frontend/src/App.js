@@ -5,6 +5,7 @@ import SelectedAudit from "./components/selectedAudit/selectedAudit";
 import Sidebar from "./components/sidebar/sidebar";
 import Dashboard from "./components/dashboard/Dashboard";
 import AuditDetail from "./components/auditcompleteddetails/AuditCompletedDetails.js";
+import Calendar from './components/calendar/calendar.js';
 
 
 function App() {
@@ -14,13 +15,12 @@ function App() {
         <Sidebar /> 
         <div style={{ flex: 1 }}>
           <Routes>
-            {/* La page Dashboard s'affichera par défaut */}
             <Route path="/" element={<Dashboard />} />
             <Route path="/audits" element={<List />} />
+            <Route path="/calendar" element={<Calendar />} />
             <Route path="/audit/:id" element={<SelectedAudit />} />
             <Route path="/audit-history" element={<AuditHistory />} />
             <Route path="/auditcompleted/:id" element={<AuditDetail />} />
-            {/* Redirection des routes inconnues vers Dashboard */}
             <Route path="*" element={<Dashboard />} /> 
           </Routes>
         </div>
