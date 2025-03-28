@@ -3,6 +3,8 @@ import { FaTachometerAlt, FaClipboardList, FaChevronRight } from "react-icons/fa
 import "./sidebar.css";
 
 export default function Sidebar() {
+  const [isOpen, setIsOpen] = useState(false);
+
   return (
     <aside className="sidebar">
       <div className="sidebar-header">

@@ -37,16 +37,12 @@ export default function SelectedAudit() {
         setLoading(false);
       }
     };
+
     fetchAudit();
   }, [id]);
 
   const handleEdit = () => {
     setIsEditing(true);
-    setValidationError(null);
-    setEditedAudit({
-      ...audit,
-      newDocument: null
-    });
   };
 
   const handleSave = async () => {
@@ -81,12 +77,14 @@ export default function SelectedAudit() {
 
       const response = await fetch(`http://localhost:5000/api/audit/edit/${id}`, {
         method: "PUT",
-        body: formData,
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(updatedData),
       });
 
       if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Failed to save audit details: ${errorText}`);
+        throw new Error("Failed to save audit details");
       }
 
       const data = await response.json();
@@ -120,41 +118,24 @@ export default function SelectedAudit() {
 
       navigate("/");
     } catch (error) {
-      console.error("Delete error:", error);
       setError(error.message);
-    } finally {
-      setDeleteDialogOpen(false);
     }
   };
 
-  const handleDeleteCancel = () => {
-    setDeleteDialogOpen(false);
-  };
-
   const handleCancel = () => {
-    setEditedAudit({
-      ...audit,
-      newDocument: null
-    });
+    setEditedAudit(audit);
     setIsEditing(false);
-    setValidationError(null);
   };
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setEditedAudit(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    setEditedAudit({ ...editedAudit, [e.target.name]: e.target.value });
   };
 
   const handleFileUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
-      setEditedAudit(prev => ({
-        ...prev,
-        newDocument: file
-      }));
+      console.log("Selected file:", file); 
+      setEditedAudit({ ...editedAudit, document: file }); 
     }
   };
 
