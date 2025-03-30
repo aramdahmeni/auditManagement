@@ -1,19 +1,23 @@
 import React, { useState } from "react";
-import { FaTachometerAlt, FaClipboardList, FaCalendarAlt, FaHistory, FaChevronRight, FaChevronDown, FaTasks } from "react-icons/fa"; // Ajout de l'icône FaTasks
-import { Link } from "react-router-dom";
+import { 
+  FaTachometerAlt, 
+  FaClipboardList, 
+  FaCalendarAlt, 
+  FaHistory,
+  FaChevronRight, 
+  FaChevronDown 
+} from "react-icons/fa";
+import { Link, useLocation } from "react-router-dom";
 import "./sidebar.css";
 
 export default function Sidebar() {
-  const [isAuditListOpen, setIsAuditListOpen] = useState(false);
-  const [isDashboardOpen, setIsDashboardOpen] = useState(true);
+  const [isAuditMenuOpen, setIsAuditMenuOpen] = useState(false);
+  const location = useLocation();
 
-  const toggleAuditList = () => {
-    setIsAuditListOpen(!isAuditListOpen);
-  };
+  const toggleAuditMenu = () => setIsAuditMenuOpen(!isAuditMenuOpen);
 
-  const toggleDashboard = () => {
-    setIsDashboardOpen(!isDashboardOpen);
-  };
+  // Check active route for styling
+  const isActive = (path) => location.pathname === path;
 
   return (
     <aside className="sidebar">
@@ -22,63 +26,63 @@ export default function Sidebar() {
       </div>
       
       <nav className="sidebar-nav">
+        {/* Quick Access Section */}
         <div className="nav-section">
           <h3 className="nav-title">Quick Access</h3>
           <ul>
-            <li className={`${isDashboardOpen ? 'active' : ''}`} onClick={toggleDashboard}>
-              <Link to="/dashboard" className="nav-link">
+            <li className={isActive('/dashboard') ? 'active' : ''}>
+              <Link to="/" className="nav-link">
                 <FaTachometerAlt className="nav-icon" />
                 <span>Dashboard</span>
-                {isDashboardOpen ? (
-                  <FaChevronDown className="nav-arrow" />
-                ) : (
-                  <FaChevronRight className="nav-arrow" />
-                )}
+                <FaChevronRight className="nav-arrow" />
               </Link>
             </li>
           </ul>
         </div>
-
-        <div className="nav-section">
         
-          <h3 className="nav-title" onClick={toggleAuditList}>
-            <div className="nav-link">
-              <FaTasks className="nav-icon" /> 
-              <span>Audit Management</span>
-              {isAuditListOpen ? (
-                <FaChevronDown className="nav-arrow" />
-              ) : (
-                <FaChevronRight className="nav-arrow" />
-              )}
-            </div>
-          </h3>
-          
-         
-          {isAuditListOpen && (
-            <ul>
-              <li className="dropdown-item">
-                <Link to="/audits" className="nav-link">
-                  <FaClipboardList className="nav-icon" />
-                  <span>Audit List</span>
-                </Link>
-              </li>
-              <li className="dropdown-item">
-                <Link to="/calendar" className="nav-link">
-                  <FaCalendarAlt className="nav-icon" />
-                  <span>Calendar</span>
-                </Link>
-              </li>
-              <li className="dropdown-item">
-                <Link to="/audit-history" className="nav-link">
-                  <FaHistory className="nav-icon" />
-                  <span>Audit History</span>
-                </Link>
-              </li>
-            </ul>
-          )}
+        {/* Audit Management Section */}
+        <div className="nav-section">
+          <h3 className="nav-title">Audit Management</h3>
+          <ul>
+          <li 
+  className={`${isAuditMenuOpen ? 'active' : ''} ${isActive('/audits') ? 'current' : ''}`}
+>
+  <div className="nav-link" style={{ display: 'flex', alignItems: 'center' }}>
+    <Link to="/audits" style={{ flex: 1, display: 'flex', alignItems: 'center', textDecoration: 'none', color: 'inherit' }}>
+      <FaClipboardList className="nav-icon" />
+      <span>Audits</span>
+    </Link>
+    <div onClick={toggleAuditMenu} style={{ cursor: 'pointer', padding: '0 8px' }}>
+      {isAuditMenuOpen ? (
+        <FaChevronDown className="nav-arrow" />
+      ) : (
+        <FaChevronRight className="nav-arrow" />
+      )}
+    </div>
+  </div>
+</li>
+            {/* Dropdown Items */}
+            {isAuditMenuOpen && (
+              <>
+                <li className={`dropdown-item ${isActive('/calendar') ? 'current' : ''}`}>
+                  <Link to="/calendar" className="nav-link">
+                    <FaCalendarAlt className="nav-icon" />
+                    <span>Audit Calendar</span>
+                  </Link>
+                </li>
+                <li className={`dropdown-item ${isActive('/audit-history') ? 'current' : ''}`}>
+                  <Link to="/audit-history" className="nav-link">
+                    <FaHistory className="nav-icon" />
+                    <span>Audit History</span>
+                  </Link>
+                </li>
+              </>
+            )}
+          </ul>
         </div>
       </nav>
       
+      {/* User Profile Section */}
       <div className="sidebar-footer">
         <div className="user-profile">
           <div className="avatar">AD</div>

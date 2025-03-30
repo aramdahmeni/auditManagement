@@ -91,7 +91,7 @@ export default function List() {
         <div className="action-buttons">
           <button 
             className="add-button"
-            onClick={() => navigate("/audit/new")}
+            onClick={() => navigate("/audits/new")}
           >
             <FaPlus /> Add Audit
           </button>

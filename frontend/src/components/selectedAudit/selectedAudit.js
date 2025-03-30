@@ -67,33 +67,29 @@ export default function SelectedAudit() {
       formData.append("endDate", editedAudit.endDate);
       formData.append("comment", editedAudit.comment?.trim() || "No comment available");
 
-      if (editedAudit.newDocument) {
+      if (editedAudit.newDocument instanceof File) {
         formData.append("document", editedAudit.newDocument);
       } else if (editedAudit.document) {
         formData.append("documentPath", editedAudit.document);
-      } else {
-        formData.append("documentPath", "");
       }
 
-      const response = await fetch(`http://localhost:5000/api/audit/edit/${id}`, {
+      const response = await fetch(`http://localhost:5000/api/audit/update/${id}`, {
         method: "PUT",
-        body: formData, // Changed from JSON.stringify(updatedData) to formData
+        body: formData,
       });
 
       if (!response.ok) {
-        throw new Error("Failed to save audit details");
+        const errorResponse = await response.json();
+        throw new Error(errorResponse.error || "Failed to save audit details");
       }
 
       const data = await response.json();
-      setAudit(data);
-      setEditedAudit({
-        ...data,
-        newDocument: null
-      });
+      setAudit(data.audit);
+      setEditedAudit({ ...data.audit, newDocument: null });
       setIsEditing(false);
       setValidationError(null);
     } catch (error) {
-      console.error("Error saving audit:", error);
+      console.error("Error updating audit:", error.stack);
       setError(error.message || "An unknown error occurred.");
     }
   };
@@ -102,7 +98,7 @@ export default function SelectedAudit() {
     setDeleteDialogOpen(true);
   };
 
-  const handleDeleteCancel = () => { // Added this missing function
+  const handleDeleteCancel = () => { 
     setDeleteDialogOpen(false);
   };
 
@@ -117,7 +113,7 @@ export default function SelectedAudit() {
         throw new Error(errorData.message || "Failed to delete audit");
       }
 
-      navigate("/");
+      navigate("/audits");
     } catch (error) {
       setError(error.message);
     }
@@ -135,8 +131,7 @@ export default function SelectedAudit() {
   const handleFileUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
-      console.log("Selected file:", file); 
-      setEditedAudit({ ...editedAudit, newDocument: file }); // Changed from document to newDocument
+      setEditedAudit({ ...editedAudit, newDocument: file });
     }
   };
 
@@ -162,7 +157,8 @@ export default function SelectedAudit() {
       </div>
 
       <div className="audit-form">
-        <div className="audit-column">
+        {/* Row 1 */}
+        <div className="form-row">
           <div className="form-group">
             <label>Audit Type</label>
             <input
@@ -175,6 +171,20 @@ export default function SelectedAudit() {
             />
           </div>
 
+          <div className="form-group">
+            <label>Objective</label>
+            <input
+              name="objective"
+              value={editedAudit.objective || ""}
+              onChange={handleChange}
+              readOnly={!isEditing}
+              className={!isEditing ? "read-only" : ""}
+            />
+          </div>
+        </div>
+
+        {/* Row 2 */}
+        <div className="form-row">
           <div className="form-group">
             <label>Start Date</label>
             {isEditing ? (
@@ -195,43 +205,6 @@ export default function SelectedAudit() {
           </div>
 
           <div className="form-group">
-            <label>Created By</label>
-            <input
-              type="text"
-              name="createdBy"
-              value={editedAudit.createdBy?.username || ""}
-              readOnly
-              className="read-only"
-            />
-          </div>
-
-          <div className="form-group">
-            <label>Comments</label>
-            <textarea
-              name="comment"
-              value={editedAudit.comment || "No comment available"}
-              onChange={handleChange}
-              readOnly={!isEditing}
-              className={!isEditing ? "read-only" : ""}
-              rows="3"
-            />
-          </div>
-        </div>
-
-        <div className="audit-column">
-          <div className="form-group">
-            <label>Objective</label>
-            <textarea
-              name="objective"
-              value={editedAudit.objective || ""}
-              onChange={handleChange}
-              readOnly={!isEditing}
-              className={!isEditing ? "read-only" : ""}
-              rows="3"
-            />
-          </div>
-
-          <div className="form-group">
             <label>End Date</label>
             {isEditing ? (
               <input
@@ -248,6 +221,20 @@ export default function SelectedAudit() {
                 className="read-only"
               />
             )}
+          </div>
+        </div>
+
+        {/* Row 3 */}
+        <div className="form-row">
+          <div className="form-group">
+            <label>Created By</label>
+            <input
+              type="text"
+              name="createdBy"
+              value={editedAudit.createdBy?.username || ""}
+              readOnly
+              className="read-only"
+            />
           </div>
 
           <div className="form-group">
@@ -268,7 +255,25 @@ export default function SelectedAudit() {
               </div>
             )}
           </div>
+        </div>
 
+        {/* Row 4 - Full width */}
+        <div className="form-row-full">
+          <div className="form-group">
+            <label>Comments</label>
+            <textarea
+              name="comment"
+              value={editedAudit.comment || "No comment available"}
+              onChange={handleChange}
+              readOnly={!isEditing}
+              className={!isEditing ? "read-only" : ""}
+              rows="3"
+            />
+          </div>
+        </div>
+
+        {/* Row 5 - Full width */}
+        <div className="form-row-full">
           <div className="form-group">
             <label>Documents</label>
             {isEditing ? (
@@ -317,6 +322,7 @@ export default function SelectedAudit() {
         </div>
       </div>
 
+      {/* Action buttons */}
       <div className="action-buttons">
         {isEditing ? (
           <>

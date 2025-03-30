@@ -6,7 +6,7 @@ import Sidebar from "./components/sidebar/sidebar";
 import Dashboard from "./components/dashboard/Dashboard";
 import AuditDetail from "./components/auditcompleteddetails/AuditCompletedDetails.js";
 import Calendar from './components/calendar/calendar.js';
-
+import Create from './components/createAudit/createAudit.js'
 
 function App() {
   return (
@@ -17,6 +17,7 @@ function App() {
           <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="/audits" element={<List />} />
+            <Route path="/audits/new" element={<Create/>} />
             <Route path="/calendar" element={<Calendar />} />
             <Route path="/audit/:id" element={<SelectedAudit />} />
             <Route path="/audit-history" element={<AuditHistory />} />
