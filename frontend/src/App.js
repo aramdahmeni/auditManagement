@@ -4,9 +4,11 @@ import AuditHistory from "./components/AuditHistory/AuditHistory";
 import SelectedAudit from "./components/selectedAudit/selectedAudit";
 import Sidebar from "./components/sidebar/sidebar";
 import Dashboard from "./components/dashboard/Dashboard";
-import AuditDetail from "./components/auditcompleteddetails/AuditCompletedDetails.js";
 import Calendar from './components/calendar/calendar.js';
-import Create from './components/createAudit/createAudit.js'
+import Create from './components/createAudit/createAudit.js';
+// Import des nouveaux composants
+import OutcomeList from './components/outcomes/OutcomesList';
+
 
 function App() {
   return (
@@ -20,8 +22,13 @@ function App() {
             <Route path="/audits/new" element={<Create/>} />
             <Route path="/calendar" element={<Calendar />} />
             <Route path="/audit/:id" element={<SelectedAudit />} />
+            
+          
+<Route path="/audits/:id/outcomes" element={<OutcomeList />} />
+
+
+         
             <Route path="/audit-history" element={<AuditHistory />} />
-            <Route path="/auditcompleted/:id" element={<AuditDetail />} />
             <Route path="*" element={<Dashboard />} /> 
           </Routes>
         </div>
@@ -30,4 +37,4 @@ function App() {
   );
 }
 
-export default App; 
+export default App;
