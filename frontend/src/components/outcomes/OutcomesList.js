@@ -1,15 +1,11 @@
 import React, { useState } from 'react';
-import { useParams } from 'react-router-dom'; 
+import { useParams } from 'react-router-dom';
 import './outcomes.css';
 
 const OutcomeList = () => {
-  const { auditId } = useParams(); 
-  const outcomeTypes = [
-    'Non-conformity',
-    'OFI',
-    'Strength',
-    'Sensitive point',
-  ];
+  const { auditId } = useParams();
+
+  const outcomeTypes = ['Non-conformity', 'OFI', 'Strength', 'Sensitive point'];
 
   const [selectedType, setSelectedType] = useState('');
   const [dialogVisible, setDialogVisible] = useState(false);
@@ -25,11 +21,13 @@ const OutcomeList = () => {
     monitoringPlan: ''
   });
 
-  const [subActions, setSubActions] = useState([{ 
-    id: Date.now(), 
-    description: '', 
-    status: 'Not started' 
-  }]);
+  const [subActions, setSubActions] = useState([
+    { id: Date.now(), description: '', status: 'Not started' }
+  ]);
+  
+  const [loading, setLoading] = useState(false);  // State to track submission progress
+  const [errorMessage, setErrorMessage] = useState(null); // To capture error messages
+  const [successMessage, setSuccessMessage] = useState(null); // To capture success messages
 
   const resetForm = () => {
     setFormData({
@@ -43,17 +41,17 @@ const OutcomeList = () => {
       riskLevel: '',
       monitoringPlan: ''
     });
-    setSubActions([{ 
-      id: Date.now(), 
-      description: '', 
-      status: 'Not started' 
-    }]);
+    setSubActions([
+      { id: Date.now(), description: '', status: 'Not started' }
+    ]);
   };
 
   const handleOpenDialog = (type) => {
     setSelectedType(type);
     resetForm();
     setDialogVisible(true);
+    setErrorMessage(null); // Reset error message
+    setSuccessMessage(null); // Reset success message
   };
 
   const handleCloseDialog = () => {
@@ -62,32 +60,36 @@ const OutcomeList = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleAddSubAction = () => {
-    setSubActions(prev => [...prev, { 
-      id: Date.now(), 
-      description: '', 
-      status: 'Not started' 
-    }]);
+    setSubActions((prev) => [
+      ...prev,
+      { id: Date.now(), description: '', status: 'Not started' }
+    ]);
   };
 
   const handleRemoveSubAction = (id) => {
     if (subActions.length > 1) {
-      setSubActions(prev => prev.filter(action => action.id !== id));
+      setSubActions((prev) => prev.filter((action) => action.id !== id));
     }
   };
 
   const handleSubActionChange = (id, field, value) => {
-    setSubActions(prev => prev.map(action =>
-      action.id === id ? { ...action, [field]: value } : action
-    ));
+    setSubActions((prev) =>
+      prev.map((action) =>
+        action.id === id ? { ...action, [field]: value } : action
+      )
+    );
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault(); 
-    
+    e.preventDefault();
+    setLoading(true);
+    setErrorMessage(null); // Reset previous error messages
+    setSuccessMessage(null); // Reset success message
+
     const newItem = {
       ...formData,
       type: selectedType,
@@ -95,32 +97,31 @@ const OutcomeList = () => {
     };
 
     if (selectedType === 'Non-conformity') {
-      newItem.subActions = subActions.filter(a => a.description.trim() !== '');
+      newItem.subActions = subActions.filter((a) => a.description.trim() !== '');
     }
 
     try {
       const response = await fetch(
-        `http://localhost:5000/api/audits/${auditId}/outcomes`, 
+        `http://localhost:5000/api/audits/${auditId}/outcomes`,
         {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(newItem),
         }
       );
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
       const result = await response.json();
-      console.log('Success:', result);
+      setSuccessMessage('Outcome successfully saved.');
       setDialogVisible(false);
-     
+      resetForm();
+      console.log('Success:', result);
     } catch (error) {
+      setErrorMessage(`Error: ${error.message}`);
       console.error('Error:', error);
-      alert(`Error while saving the outcome: ${error.message}`);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -168,6 +169,7 @@ const OutcomeList = () => {
                   value={formData.description}
                   onChange={handleChange}
                   required
+                  autoFocus
                 />
 
                 <label htmlFor="impactedAssets">Impacted assets:</label>
@@ -181,7 +183,6 @@ const OutcomeList = () => {
 
                 <div className="sub-actions">
                   <h3>Corrective sub-actions</h3>
-
                   {subActions.map((action) => (
                     <div key={action.id} className="sub-action">
                       <textarea
@@ -204,22 +205,15 @@ const OutcomeList = () => {
                       </select>
                       <button
                         type="button"
-                        className="remove-btn"
                         onClick={() => handleRemoveSubAction(action.id)}
                         disabled={subActions.length <= 1}
-                        aria-label="Remove sub-action"
+                        className="remove-btn"
                       >
                         Remove
                       </button>
                     </div>
                   ))}
-
-                  <button
-                    type="button"
-                    className="add-btn"
-                    onClick={handleAddSubAction}
-                    aria-label="Add sub-action"
-                  >
+                  <button type="button" onClick={handleAddSubAction} className="add-btn">
                     + Add a sub-action
                   </button>
                 </div>
@@ -292,8 +286,13 @@ const OutcomeList = () => {
               </>
             )}
 
+            {errorMessage && <p className="error-message">{errorMessage}</p>}
+            {successMessage && <p className="success-message">{successMessage}</p>}
+
             <div className="btn-group">
-              <button type="submit">Save</button>
+              <button type="submit" disabled={loading}>
+                {loading ? 'Saving...' : 'Save'}
+              </button>
               <button type="button" onClick={handleCloseDialog}>Cancel</button>
             </div>
           </form>
