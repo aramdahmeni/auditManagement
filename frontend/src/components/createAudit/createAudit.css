@@ -1,15 +1,23 @@
-.create-audit-container {
-    max-width: 800px;
-    margin: 20px auto;
+
+.create-audit-page-wrapper {
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
     padding: 20px;
-    background: #fff;
-    border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-}
+    background-color: #f5f7fa; /* Matching your existing background */
+  }
+  
+  /* Modify your existing container (keep all other styles) */
+  .create-audit-container {
+    max-width: 800px;
+    width: 100%;
+    margin: 0; /* Remove any existing margin */
+    /* Keep all your other existing styles */
+  }
 
 .audit-form-header {
     display: flex;
-    justify-content: space-between;
     align-items: center;
     margin-bottom: 20px;
     padding-bottom: 15px;
@@ -32,7 +40,71 @@
     font-weight: 600;
     color: #333;
 }
+/* Tasks Section Styles */
+.tasks-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 10px;
+}
 
+.task-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.task-inputs {
+    display: flex;
+    gap: 10px;
+    flex: 1;
+}
+
+.task-inputs input {
+    flex: 2;
+    padding: 8px 12px;
+    border: 1px solid var(--medium-gray);
+    border-radius: var(--border-radius);
+}
+
+.task-inputs select {
+    flex: 1;
+    padding: 8px 12px;
+    border: 1px solid var(--medium-gray);
+    border-radius: var(--border-radius);
+}
+
+.btn-add-task {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 8px 12px;
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    margin-top: 5px;
+}
+
+.btn-remove-task {
+    background: none;
+    border: none;
+    color: var(--danger-color);
+    cursor: pointer;
+    padding: 5px;
+    display: flex;
+    align-items: center;
+}
+
+.btn-remove-task:disabled {
+    color: var(--medium-gray);
+    cursor: not-allowed;
+}
+
+.btn-add-task:hover {
+    background-color: var(--secondary-color);
+}
 .form-group input,
 .form-group select,
 .form-group textarea {

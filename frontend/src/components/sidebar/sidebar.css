@@ -207,3 +207,31 @@
 .nav-link:hover {
   background-color: rgba(255, 255, 255, 0.1);
 }
+/* Add this to your existing sidebar.css */
+.dropdown-item.active {
+  background-color: rgba(67, 97, 238, 0.1);
+  color: var(--primary-color);
+  font-weight: 500;
+}
+
+.dropdown-item.active:before {
+  background: var(--primary-color);
+}
+
+.dropdown-item.active .nav-icon {
+  color: var(--primary-color);
+}
+
+.dropdown-item .nav-link {
+  padding-left: 2.5rem; /* Indent dropdown items */
+}
+
+/* Ensure dropdown items have the same hover effect */
+.dropdown-item:hover {
+  background-color: rgba(67, 97, 238, 0.05);
+  color: var(--primary-color);
+}
+
+.dropdown-item:hover .nav-icon {
+  color: var(--primary-color);
+}

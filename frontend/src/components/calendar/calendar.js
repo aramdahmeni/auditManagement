@@ -7,21 +7,22 @@ import "./calendar.css";
 const statusColors = {
   Ongoing: '#f39c12',
   Completed: '#2ecc71',
-  Pending: '#e74c3c'
+  Pending: '#e74c3c',
+  default: '#3498db' // Added default color
 };
 
 export default function Calendar() {
   const [audits, setAudits] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-//get audits
+
   useEffect(() => {
     const fetchAudits = async () => {
       try {
         const res = await fetch("http://localhost:5000/api/audit/");
         const data = await res.json();
         setAudits(data.map(audit => ({
-          title: audit.objective || `Audit #${audit.id}`,
+          title: `${audit.type}: ${audit.objective}`, // Combine type and objective
           start: audit.startDate,
           end: audit.endDate,
           backgroundColor: statusColors[audit.status] || statusColors.default,
@@ -37,6 +38,15 @@ export default function Calendar() {
     fetchAudits();
   }, []);
 
+  // Custom event content renderer
+  const renderEventContent = (eventInfo) => {
+    return (
+      <div className="custom-event">
+        <div className="event-title">{eventInfo.event.title}</div>
+      </div>
+    );
+  };
+
   if (loading) return <div>Loading...</div>;
   if (error) return <div>Error: {error}</div>;
 
@@ -51,6 +61,11 @@ export default function Calendar() {
           end: "prev,next"
         }}
         events={audits}
+        eventContent={renderEventContent} 
+        dayMaxEvents={3} 
+        moreLinkContent={(args) => {
+          return `+ ${args.num} more`; 
+        }}
       />
     </div>
   );

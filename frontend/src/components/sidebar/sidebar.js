@@ -64,18 +64,18 @@ export default function Sidebar() {
             {/* Dropdown Items */}
             {isAuditMenuOpen && (
               <>
-                <li className={`dropdown-item ${isActive('/calendar') ? 'current' : ''}`}>
-                  <Link to="/calendar" className="nav-link">
-                    <FaCalendarAlt className="nav-icon" />
-                    <span>Audit Calendar</span>
-                  </Link>
-                </li>
-                <li className={`dropdown-item ${isActive('/audit-history') ? 'current' : ''}`}>
-                  <Link to="/audit-history" className="nav-link">
-                    <FaHistory className="nav-icon" />
-                    <span>Audit History</span>
-                  </Link>
-                </li>
+                <li className={`dropdown-item ${isActive('/calendar') ? 'active' : ''}`}>
+  <Link to="/calendar" className="nav-link">
+    <FaCalendarAlt className="nav-icon" />
+    <span>Audit Calendar</span>
+  </Link>
+</li>
+<li className={`dropdown-item ${isActive('/audit-history') ? 'active' : ''}`}>
+  <Link to="/audit-history" className="nav-link">
+    <FaHistory className="nav-icon" />
+    <span>Audit History</span>
+  </Link>
+</li>
               </>
             )}
           </ul>
