@@ -1,0 +1,172 @@
+
+.outcome-app {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2rem;
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    color: #333;
+  }
+  h1 {
+    text-align: center;
+    margin-bottom: 30px;
+  }
+  
+  .info-box {
+    background-color: #f8f9fa;
+    border-left: 4px solid #4ECDC4;
+    padding: 10px;
+    margin-bottom: 15px;
+    border-radius: 4px;
+  }
+  
+  .info-box.warning {
+    border-left-color: #FF6B6B;
+    background-color: #fff8f8;
+  }
+  
+  .info-box p, .info-box ul {
+    margin: 5px 0;
+  }
+  
+  .info-box ul {
+    padding-left: 20px;
+  }
+  
+  .info-box li {
+    margin-bottom: 5px;
+  }
+  
+  
+  select, textarea, input {
+    width: 100%;
+    padding: 8px;
+    margin: 5px 0 15px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+  }
+  
+  select {
+    height: 40px;
+  }
+  
+  /* Reste de votre CSS existant */
+  .container {
+    padding: 80px;
+    font-family: Arial, sans-serif;
+  }
+  
+  h1 {
+    text-align: center;
+    margin-bottom: 30px;
+  }
+  
+  .outcome-grid {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  
+  .outcome-box {
+    border: 1px solid #aaa;
+    padding: 15px;
+    width: 200px;
+    cursor: pointer;
+    border-radius: 8px;
+    background-color: #f9f9f9;
+    transition: background 0.3s;
+  }
+  
+  .outcome-box:hover {
+    background-color: #eef;
+  }
+  
+  .dialog {
+    position: fixed;
+    top: 20%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: white;
+    border: 1px solid #ccc;
+    padding: 25px;
+    width: 400px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    border-radius: 10px;
+  }
+  
+  .dialog label {
+    display: block;
+    margin-top: 10px;
+    font-weight: bold;
+  }
+  
+  .btn-group {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 15px;
+  }
+  
+  button {
+    padding: 8px 16px;
+    font-size: 14px;
+    cursor: pointer;
+  }
+  .outcome-grid {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  
+  .outcome-box {
+    border: 1px solid #aaa;
+    padding: 15px;
+    width: 200px;
+    cursor: pointer;
+    border-radius: 8px;
+    background-color: #f9f9f9;
+    transition: background 0.3s;
+  }
+  
+  .outcome-box:hover {
+    background-color: #eef;
+  }
+  
+  .dialog {
+    position: fixed;
+    top: 20%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: white;
+    border: 1px solid #ccc;
+    padding: 25px;
+    width: 400px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    border-radius: 10px;
+  }
+  
+  .dialog label {
+    display: block;
+    margin-top: 10px;
+    font-weight: bold;
+  }
+  
+  .dialog textarea,
+  .dialog input {
+    width: 100%;
+    padding: 5px;
+    margin-top: 5px;
+    margin-bottom: 10px;
+  }
+  
+  .btn-group {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 15px;
+  }
+  
+  button {
+    padding: 8px 16px;
+    font-size: 14px;
+    cursor: pointer;
+  }

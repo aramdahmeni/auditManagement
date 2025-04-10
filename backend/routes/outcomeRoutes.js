@@ -1,14 +1,11 @@
-const express = require("express");
+const express = require('express');
 const router = express.Router();
-const outcomeController = require("../controllers/outcomeController");
-
-router.post("/", outcomeController.createOutcome);
-
-router.get("/", outcomeController.getOutcomesByAudit);
+const outcomeController = require('../controllers/outcomeController');
 
 
-router.put("/:id", outcomeController.updateOutcome);
-
-router.delete("/:id", outcomeController.deleteOutcome);
+router.post('/', outcomeController.createOutcome);
+router.get('/:auditId', outcomeController.getOutcomesByAudit); 
+router.put('/:id', outcomeController.updateOutcome);
+router.delete('/:id', outcomeController.deleteOutcome);
 
 module.exports = router;
