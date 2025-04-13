@@ -1,172 +1,480 @@
+:root {
+  --primary-500: #4f46e5;
+  --primary-600: #4338ca;
+  --success-500: #10b981;
+  --error-500: #ef4444;
+  --warning-500: #f59e0b;
+  --gray-100: #f8fafc;
+  --gray-200: #e2e8f0;
+  --gray-300: #cbd5e1;
+  --gray-700: #334155;
+  --gray-900: #1e293b;
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
 
-.outcome-app {
-    max-width: 800px;
-    margin: 0 auto;
-    padding: 2rem;
-    font-family: 'Segoe UI', system-ui, sans-serif;
-    color: #333;
+/* Enhanced Base Styles */
+.ol-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2.5rem 1.5rem;
+  color: var(--gray-900);
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  line-height: 1.6;
+}
+
+/* Professional Header with Micro-Interactions */
+.ol-main-title {
+  font-size: 2.75rem;
+  margin-bottom: 2.5rem;
+  text-align: center;
+  font-weight: 800;
+  background: linear-gradient(90deg, var(--primary-500), var(--success-500));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  position: relative;
+  letter-spacing: -0.05em;
+  line-height: 1.2;
+}
+
+.ol-main-title::after {
+  content: '';
+  position: absolute;
+  bottom: -1rem;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 6rem;
+  height: 0.375rem;
+  background: linear-gradient(90deg, var(--primary-500), var(--success-500));
+  border-radius: 0.25rem;
+  opacity: 0.8;
+  transition: width 0.3s ease;
+}
+
+.ol-main-title:hover::after {
+  width: 8rem;
+}
+
+/* Premium Card Design */
+.ol-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 2rem;
+  margin-top: 3rem;
+}
+
+.ol-card {
+  background: white;
+  border-radius: 1rem;
+  padding: 2rem 1.75rem;
+  cursor: pointer;
+  transition: var(--transition);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--gray-200);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
+}
+
+.ol-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 0.375rem;
+  background: linear-gradient(90deg, var(--primary-500), var(--success-500));
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  z-index: -1;
+}
+
+.ol-card:hover {
+  transform: translateY(-0.5rem);
+  box-shadow: var(--shadow-xl);
+  border-color: transparent;
+}
+
+.ol-card:hover::before {
+  height: 100%;
+}
+
+.ol-card:hover .ol-card-title,
+.ol-card:hover .ol-card-icon {
+  color: white;
+}
+
+.ol-card-title {
+  font-size: 1.375rem;
+  margin-bottom: 1rem;
+  color: var(--gray-900);
+  font-weight: 700;
+  transition: var(--transition);
+  text-align: center;
+}
+
+.ol-card-icon {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+  transition: var(--transition);
+  color: var(--primary-500);
+}
+
+/* Card Variants */
+.ol-card-non-conformity::before {
+  background: linear-gradient(90deg, var(--error-500), var(--warning-500));
+}
+
+.ol-card-non-conformity .ol-card-icon {
+  color: var(--error-500);
+}
+
+.ol-card-ofi::before {
+  background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+}
+
+.ol-card-strength::before {
+  background: linear-gradient(90deg, var(--success-500), #84cc16);
+}
+
+.ol-card-sensitive-point::before {
+  background: linear-gradient(90deg, #64748b, #94a3b8);
+}
+
+/* Executive Dialog */
+.ol-dialog-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  z-index: 1000;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  animation: ol-fadeIn 0.4s ease-out;
+}
+
+.ol-dialog {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: white;
+  border-radius: 1.25rem;
+  padding: 2.5rem;
+  width: 90%;
+  max-width: 720px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: var(--shadow-xl);
+  z-index: 1001;
+  animation: ol-scaleIn 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+  border: 1px solid var(--gray-200);
+}
+
+@keyframes ol-scaleIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.95);
   }
-  h1 {
-    text-align: center;
-    margin-bottom: 30px;
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+.ol-dialog-title {
+  font-size: 1.75rem;
+  margin-bottom: 1.5rem;
+  color: var(--primary-500);
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  text-align: center;
+}
+
+/* Professional Form Elements */
+.ol-form {
+  display: grid;
+  gap: 1.75rem;
+}
+
+.ol-form-group {
+  position: relative;
+}
+
+.ol-form-label {
+  display: block;
+  margin-bottom: 0.75rem;
+  font-weight: 600;
+  color: var(--gray-700);
+  font-size: 0.9375rem;
+}
+
+.ol-form-input,
+.ol-form-select,
+.ol-form-textarea {
+  width: 100%;
+  padding: 0.9375rem 1.25rem;
+  border: 1px solid var(--gray-200);
+  border-radius: 0.75rem;
+  font-size: 1rem;
+  transition: var(--transition);
+  background-color: var(--gray-100);
+  color: var(--gray-900);
+}
+
+.ol-form-input:focus,
+.ol-form-select:focus,
+.ol-form-textarea:focus {
+  outline: none;
+  border-color: var(--primary-500);
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+  background-color: white;
+}
+
+.ol-form-textarea {
+  min-height: 140px;
+  resize: vertical;
+  line-height: 1.5;
+}
+
+/* Premium Sub-Actions */
+.ol-sub-actions {
+  margin-top: 1.5rem;
+  padding: 1.75rem;
+  background-color: var(--gray-100);
+  border-radius: 1rem;
+  border: 1px dashed var(--gray-300);
+}
+
+.ol-sub-actions-title {
+  font-size: 1.25rem;
+  margin-bottom: 1.25rem;
+  color: var(--primary-500);
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Executive Buttons */
+.ol-btn {
+  padding: 0.875rem 1.75rem;
+  border-radius: 0.75rem;
+  font-weight: 600;
+  font-size: 1rem;
+  transition: var(--transition);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.625rem;
+  cursor: pointer;
+  border: none;
+  line-height: 1;
+}
+
+.ol-btn-primary {
+  background: linear-gradient(135deg, var(--primary-500), var(--primary-600));
+  color: white;
+  box-shadow: var(--shadow-md);
+  position: relative;
+  overflow: hidden;
+}
+
+.ol-btn-primary::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -60%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    to right,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.2) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  transform: rotate(30deg);
+  transition: all 0.5s cubic-bezier(0.19, 1, 0.22, 1);
+}
+
+.ol-btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+.ol-btn-primary:hover::after {
+  left: 100%;
+}
+
+/* Enhanced Spinner */
+.ol-spinner {
+  width: 1.25rem;
+  height: 1.25rem;
+  border: 3px solid rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  border-top-color: white;
+  animation: ol-spin 0.8s linear infinite;
+  margin-right: 0.5rem;
+}
+
+/* Sophisticated Animations */
+@keyframes ol-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* Responsive Excellence */
+@media (max-width: 768px) {
+  .ol-container {
+    padding: 1.75rem 1.25rem;
   }
   
-  .info-box {
-    background-color: #f8f9fa;
-    border-left: 4px solid #4ECDC4;
-    padding: 10px;
-    margin-bottom: 15px;
-    border-radius: 4px;
+  .ol-main-title {
+    font-size: 2.25rem;
   }
   
-  .info-box.warning {
-    border-left-color: #FF6B6B;
-    background-color: #fff8f8;
+  .ol-dialog {
+    padding: 1.75rem;
+    width: 95%;
   }
   
-  .info-box p, .info-box ul {
-    margin: 5px 0;
+  .ol-form-actions {
+    flex-direction: column-reverse;
+    gap: 0.75rem;
   }
   
-  .info-box ul {
-    padding-left: 20px;
-  }
-  
-  .info-box li {
-    margin-bottom: 5px;
-  }
-  
-  
-  select, textarea, input {
+  .ol-btn {
     width: 100%;
-    padding: 8px;
-    margin: 5px 0 15px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
   }
-  
-  select {
-    height: 40px;
-  }
-  
-  /* Reste de votre CSS existant */
-  .container {
-    padding: 80px;
-    font-family: Arial, sans-serif;
-  }
-  
-  h1 {
-    text-align: center;
-    margin-bottom: 30px;
-  }
-  
-  .outcome-grid {
-    display: flex;
-    gap: 20px;
-    flex-wrap: wrap;
-    justify-content: center;
-  }
-  
-  .outcome-box {
-    border: 1px solid #aaa;
-    padding: 15px;
-    width: 200px;
-    cursor: pointer;
-    border-radius: 8px;
-    background-color: #f9f9f9;
-    transition: background 0.3s;
-  }
-  
-  .outcome-box:hover {
-    background-color: #eef;
-  }
-  
-  .dialog {
-    position: fixed;
-    top: 20%;
-    left: 50%;
-    transform: translateX(-50%);
-    background: white;
-    border: 1px solid #ccc;
-    padding: 25px;
-    width: 400px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-    border-radius: 10px;
-  }
-  
-  .dialog label {
-    display: block;
-    margin-top: 10px;
-    font-weight: bold;
-  }
-  
-  .btn-group {
-    display: flex;
-    justify-content: space-between;
-    margin-top: 15px;
-  }
-  
-  button {
-    padding: 8px 16px;
-    font-size: 14px;
-    cursor: pointer;
-  }
-  .outcome-grid {
-    display: flex;
-    gap: 20px;
-    flex-wrap: wrap;
-    justify-content: center;
-  }
-  
-  .outcome-box {
-    border: 1px solid #aaa;
-    padding: 15px;
-    width: 200px;
-    cursor: pointer;
-    border-radius: 8px;
-    background-color: #f9f9f9;
-    transition: background 0.3s;
-  }
-  
-  .outcome-box:hover {
-    background-color: #eef;
-  }
-  
-  .dialog {
-    position: fixed;
-    top: 20%;
-    left: 50%;
-    transform: translateX(-50%);
-    background: white;
-    border: 1px solid #ccc;
-    padding: 25px;
-    width: 400px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-    border-radius: 10px;
-  }
-  
-  .dialog label {
-    display: block;
-    margin-top: 10px;
-    font-weight: bold;
-  }
-  
-  .dialog textarea,
-  .dialog input {
-    width: 100%;
-    padding: 5px;
-    margin-top: 5px;
-    margin-bottom: 10px;
-  }
-  
-  .btn-group {
-    display: flex;
-    justify-content: space-between;
-    margin-top: 15px;
-  }
-  
-  button {
-    padding: 8px 16px;
-    font-size: 14px;
-    cursor: pointer;
-  }
+}
+
+/* Accessibility Focus Styles */
+.ol-form-input:focus-visible,
+.ol-btn:focus-visible {
+  outline: 2px solid var(--primary-500);
+  outline-offset: 2px;
+}
+/* Existing Outcomes Section */
+.ol-existing-outcomes {
+  margin-top: 3rem;
+  padding: 1rem;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.ol-outcome-type-section {
+  margin-bottom: 2rem;
+}
+
+.ol-outcome-type-header {
+  display: flex;
+  align-items: center;
+  color: #333;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid #eee;
+  margin-bottom: 1rem;
+}
+
+.ol-outcome-type-icon {
+  margin-left: 0.5rem;
+}
+
+.ol-outcome-count {
+  margin-left: auto;
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.ol-outcome-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1rem;
+}
+
+.ol-outcome-card {
+  background: white;
+  padding: 1rem;
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  position: relative;
+}
+
+.ol-outcome-item h4 {
+  margin-top: 0;
+  color: #333;
+}
+
+.ol-outcome-item p {
+  margin: 0.5rem 0;
+  font-size: 0.9rem;
+}
+
+.ol-outcome-item ul {
+  margin: 0.5rem 0;
+  padding-left: 1rem;
+}
+
+.ol-outcome-item li {
+  font-size: 0.85rem;
+  margin-bottom: 0.3rem;
+}
+
+.ol-outcome-date {
+  font-size: 0.8rem;
+  color: #666;
+  text-align: right;
+  margin-top: 0.5rem;
+}
+
+/* Status badges */
+.status-not-started {
+  color: #dc3545;
+}
+
+.status-in-progress {
+  color: #fd7e14;
+}
+
+.status-completed {
+  color: #28a745;
+}
+
+/* Loading and empty states */
+.ol-loading,
+.ol-no-outcomes {
+  text-align: center;
+  padding: 2rem;
+  color: #666;
+  font-style: italic;
+}
+
+/* Card colors for different types */
+.ol-outcome-non-conformity {
+  border-left: 4px solid #dc3545;
+}
+
+.ol-outcome-ofi {
+  border-left: 4px solid #17a2b8;
+}
+
+.ol-outcome-strength {
+  border-left: 4px solid #28a745;
+}
+
+.ol-outcome-sensitive-point {
+  border-left: 4px solid #ffc107;
+}
