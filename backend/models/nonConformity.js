@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 
 const NonConformitySchema = new mongoose.Schema({
-    outcomeID: { type: mongoose.Schema.Types.ObjectId, ref: "Outcome", required: true },
+  outcomeId: { type: mongoose.Schema.Types.ObjectId, ref: "Outcome", required: true },
   type: { type: String, enum: ["Major", "Minor"], required: true },
   description: { type: String, required: true },
   rootCause: { type: String, required: true },

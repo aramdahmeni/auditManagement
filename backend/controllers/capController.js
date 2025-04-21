@@ -3,8 +3,8 @@ const CAP = require("../models/cap");
 
 exports.createCAP = async (req, res) => {
     try {
-        const { ncID, responsible, dueDate, status, effectiveness } = req.body;
-        const newCAP = new CAP({ ncID, responsible, dueDate, status, effectiveness });
+        const { ncId, responsible, dueDate,action, status, effectiveness ,completionDate} = req.body;
+        const newCAP = new CAP({ ncId, responsible, dueDate,action, status, effectiveness ,completionDate});
         await newCAP.save();
         res.status(201).json({ message: "CAP created successfully", cap: newCAP });
     } catch (error) {
@@ -14,7 +14,7 @@ exports.createCAP = async (req, res) => {
 
 exports.getAllCAPs = async (req, res) => {
     try {
-        const caps = await CAP.find().populate("ncID");
+        const caps = await CAP.find().populate("ncId");
         res.status(200).json(caps);
     } catch (error) {
         res.status(500).json({ error: "Failed to retrieve CAPs", details: error.message });
@@ -23,8 +23,8 @@ exports.getAllCAPs = async (req, res) => {
 
 exports.getCAPsByNC = async (req, res) => {
     try {
-        const { ncID } = req.params;
-        const caps = await CAP.find({ ncID }).populate("ncID");
+        const { ncId } = req.params;
+        const caps = await CAP.find({ ncId }).populate("ncId");
         res.status(200).json(caps);
     } catch (error) {
         res.status(500).json({ error: "Failed to retrieve CAPs for this NC", details: error.message });

@@ -1,10 +1,11 @@
 const mongoose = require("mongoose");
 
 const OFISchema = new mongoose.Schema({
-    outcomeID: { type: mongoose.Schema.Types.ObjectId, ref: "Outcome", required: true },
+  outcomeId: { type: mongoose.Schema.Types.ObjectId, ref: "Outcome", required: true },
+    description: { type: String, required: true },
   perspective: { type: String, required: true },
   impactedAsset: { type: String, required: true },
-  correctivePlan: { type: String }
+  action: { type: String }
 }, { timestamps: true });
 
 module.exports = mongoose.model("OFI", OFISchema);

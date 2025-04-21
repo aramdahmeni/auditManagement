@@ -214,7 +214,7 @@ export default function List() {
         </thead>
         <tbody>
           {filteredAudits.map(audit => (
-            <tr key={audit._id} onClick={() => navigate(`/audit/${audit._id}`)}>
+            <tr key={audit._id} onClick={() => navigate(`/audits/${audit._id}`)}>
               <td>{audit.type}</td>
               <td>{audit.objective}</td>
               <td>{new Date(audit.startDate).toLocaleDateString()}</td>

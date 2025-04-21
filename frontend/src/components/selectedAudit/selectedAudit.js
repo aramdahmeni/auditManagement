@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { FaEdit, FaTrash, FaSave, FaTimes, FaUpload, FaDownload, FaChevronLeft } from "react-icons/fa";
+import { FaEdit, FaTrash, FaSave, FaTimes, FaUpload, FaDownload, FaChevronLeft, FaClipboardCheck } from "react-icons/fa";
 import "./selectedAudit.css";
 
 export default function SelectedAudit() {
@@ -22,6 +22,20 @@ export default function SelectedAudit() {
   const [newTask, setNewTask] = useState("");
   const [editingTaskText, setEditingTaskText] = useState("");
   const [editingTaskStatus, setEditingTaskStatus] = useState('Pending');
+  const [dateExtensionRequired, setDateExtensionRequired] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+
+  // Check if end date has passed and status isn't completed
+  useEffect(() => {
+    if (audit && !loading) {
+      const today = new Date();
+      const endDate = new Date(audit.endDate);
+      const isPastDue = endDate < today;
+      const isNotCompleted = audit.status !== "Completed";
+      
+      setDateExtensionRequired(isPastDue && isNotCompleted);
+    }
+  }, [audit, loading]);
 
   //fetch audit
   useEffect(() => {
@@ -47,7 +61,6 @@ export default function SelectedAudit() {
     fetchAudit();
   }, [id]);
 
-
   //fetch tasks 
   useEffect(() => {
     const fetchTasksByAudit = async () => {
@@ -62,10 +75,12 @@ export default function SelectedAudit() {
         console.error("Error fetching tasks:", error);
         setTasks([]);
       }
-    }; fetchTasksByAudit();
+    }; 
+    fetchTasksByAudit();
   }, [id]);
 
-  // Add new task
+  // Check if all tasks are completed
+  const allTasksCompleted = tasks.every(task => task.status === "Completed");
   const handleAddTask = () => {
     if (!newTask.trim()) return;
     const newLocalTask = {
@@ -77,71 +92,72 @@ export default function SelectedAudit() {
     setNewTask("");
   };
   
+  // Start editing a task
+  const handleStartEditTask = (task) => {
+    setEditingTaskText(task.task);
+    setEditingTaskStatus(task.status); 
+  };
 
-// Start editing a task
-const handleStartEditTask = (task) => {
-  setEditingTaskText(task.task);
-  setEditingTaskStatus(task.status); 
-};
+  // Save edited task
+  const handleSaveTask = async () => {
+    if (!editingTaskText.trim()) return;
 
-// Save edited task
-const handleSaveTask = async () => {
-  if (!editingTaskText.trim()) return;
+    try {
+      const response = await fetch(`http://localhost:5000/api/task/${editingTaskId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ 
+          task: editingTaskText.trim(),
+          status: editingTaskStatus,
+          auditID: id
+        }),
+      });
 
-  try {
-    const response = await fetch(`http://localhost:5000/api/task/${editingTaskId}`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ task: editingTaskText.trim(),
-        status: editingTaskStatus,
-        auditID:id
-       }),
-    });
+      if (!response.ok) {
+        throw new Error("Failed to update task");
+      }
 
-    if (!response.ok) {
-      throw new Error("Failed to update task");
+      setTasks(tasks.map(task => 
+        task._id === editingTaskId ? { 
+          ...task, 
+          task: editingTaskText.trim(),
+          status: editingTaskStatus
+        } : task
+      ));
+      setEditingTaskId(null);
+    } catch (error) {
+      console.error("Error updating task:", error);
+      setError("Failed to update task");
     }
+  };
 
-    setTasks(tasks.map(task => 
-      task._id === editingTaskId ? { ...task, task: editingTaskText.trim(),
-        status: editingTaskStatus
-       } : task
-    ));
+  // Delete a task
+  const handleDeleteTask = async (taskId) => {
+    if (tasks.length <= 1) {
+      setError("You must have at least one task");
+      return;
+    }
+    try {
+      const response = await fetch(`http://localhost:5000/api/task/${taskId}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to delete task");
+      }
+      setTasks(tasks.filter(task => task._id !== taskId));
+    } catch (error) {
+      console.error("Error deleting task:", error);
+      setError("Failed to delete task");
+    }
+  };
+
+  // Cancel task editing
+  const handleCancelEditTask = () => {
     setEditingTaskId(null);
-  } catch (error) {
-    console.error("Error updating task:", error);
-    setError("Failed to update task");
-  }
-};
-
-// Delete a task
-const handleDeleteTask = async (taskId) => {
-  if (tasks.length <= 1) {
-    setError("You must have at least one task");
-    return;
-  }
-
-  try {
-    const response = await fetch(`http://localhost:5000/api/task/${taskId}`, {
-      method: "DELETE",
-    });
-
-    if (!response.ok) {
-      throw new Error("Failed to delete task");
-    }
-    setTasks(tasks.filter(task => task._id !== taskId));
-  } catch (error) {
-    console.error("Error deleting task:", error);
-    setError("Failed to delete task");
-  }
-};
-
-// Cancel task editing
-const handleCancelEditTask = () => {
-  setEditingTaskId(null);
-};
+  };
 
   //edit
   const handleEdit = () => {
@@ -150,7 +166,26 @@ const handleCancelEditTask = () => {
 
   const handleSave = async () => {
     try {
-      //validators
+      // Check if date extension is required
+      const today = new Date();
+      const endDate = new Date(editedAudit.endDate);
+      const isPastDue = endDate < today;
+      const isNotCompleted = editedAudit.status !== "Completed";
+      
+      if (isPastDue && isNotCompleted) {
+        setValidationError("The end date has passed but the audit isn't completed. Please extend the end date.");
+        setIsDialogOpen(true);
+        return;
+      }
+
+      // Check if trying to complete audit with incomplete tasks
+      if (editedAudit.status === "Completed" && !allTasksCompleted) {
+        setValidationError("All tasks must be completed before marking the audit as completed.");
+        setIsDialogOpen(true);
+        return;
+      }
+
+      // Other validators
       if (!editedAudit.startDate || !editedAudit.endDate) {
         setValidationError("Both start and end dates are required.");
         setIsDialogOpen(true);
@@ -162,16 +197,19 @@ const handleCancelEditTask = () => {
         setIsDialogOpen(true);
         return;
       }
+      
       if (!editedAudit.objective || editedAudit.objective.trim().length < 4) {
         setValidationError("Objective must be at least 4 characters long.");
         setIsDialogOpen(true);
         return;
       }
-      if (editedAudit.comment && editedAudit.comment.trim().length > 0 &&  editedAudit.comment.trim().length < 4      ) {
+      
+      if (editedAudit.comment && editedAudit.comment.trim().length > 0 && editedAudit.comment.trim().length < 4) {
         setValidationError("Comment must be at least 4 characters if provided.");
         setIsDialogOpen(true);
         return;
       }
+      
       const taskNames = tasks.map(t => t.task?.trim()).filter(Boolean);
       const invalidTasks = taskNames.filter(name => name.length < 4); 
       if (invalidTasks.length > 0) {
@@ -179,14 +217,13 @@ const handleCancelEditTask = () => {
         setIsDialogOpen(true);
         return;
       }
+      
       const uniqueTasks = new Set(taskNames);
       if (uniqueTasks.size !== taskNames.length) {
         setValidationError("All tasks must be unique.");
         setIsDialogOpen(true);
         return;
       }
-
-
 
       const validatedTasks = tasks
         .filter(task => task.task?.trim() !== '')
@@ -271,7 +308,7 @@ const handleCancelEditTask = () => {
   
       const data = await updateResponse.json();
   
-      // ✅ Replace new tasks with real ones from backend
+      // Replace new tasks with real ones from backend
       const updatedTasks = tasks.map(task => {
         if (!task._id) {
           const match = uniqueNewTasks.find(t => t.task === task.task);
@@ -296,8 +333,6 @@ const handleCancelEditTask = () => {
     }
   };
   
-  
-  
   const handleCancel = () => {
     setEditedAudit(audit);
     setIsEditing(false);
@@ -306,7 +341,6 @@ const handleCancelEditTask = () => {
   const handleChange = (e) => {
     setEditedAudit({ ...editedAudit, [e.target.name]: e.target.value });
   };
-
 
   //audit delete config
   const handleDeleteClick = () => {
@@ -334,8 +368,7 @@ const handleCancelEditTask = () => {
     }
   };
 
-
-//file config
+  //file config
   const handleFileUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -355,17 +388,87 @@ const handleCancelEditTask = () => {
     setIsDialogOpen(false);
   };
 
+  const handleNavigateToOutcomes = () => {
+    navigate(`/audits/${id}/outcomes`);
+  };
+
   if (loading) return <div className="loading-state">Loading...</div>;
   if (error) return <div className="error-state">Error: {error}</div>;
 
   return (
     <div className="selected-audit-container">
       <div className="audit-header">
-        <h2>
-          <FaChevronLeft className="header-arrow" onClick={() => navigate("/audits")} />
-          Audit Details
-        </h2>
-      </div>
+  <div className="header-content">
+    <button 
+      className="back-button"
+      onClick={() => navigate("/audits")}
+      aria-label="Back to audits"
+    >
+      <FaChevronLeft className="header-arrow" />
+      <span className="header-title">Audit Details</span>
+    </button>
+    
+    <div className="action-buttons">
+      {isEditing ? (
+        <>
+          <button 
+            className="btn save-btn"
+            onClick={handleSave}
+            disabled={isSaving}
+            aria-label="Save changes"
+          >
+            <FaSave className="icon" />
+            <span className="btn-text">{isSaving ? 'Saving...' : 'Save'}</span>
+          </button>
+          <button 
+            className="btn cancel-btn"
+            onClick={handleCancel}
+            disabled={isSaving}
+            aria-label="Cancel editing"
+          >
+            <FaTimes className="icon" />
+            <span className="btn-text">Cancel</span>
+          </button>
+        </>
+      ) : (
+        <>
+          <button 
+            className="btn edit-btn"
+            onClick={handleEdit}
+            aria-label="Edit audit"
+          >
+            <FaEdit className="icon" />
+            <span className="btn-text">Edit</span>
+          </button>
+          <button 
+            className="btn delete-btn"
+            onClick={handleDeleteClick}
+            aria-label="Delete audit"
+          >
+            <FaTrash className="icon" />
+            <span className="btn-text">Delete</span>
+          </button>
+          {audit?.status === "Completed" && (
+            <button 
+              className="btn outcomes-btn"
+              onClick={handleNavigateToOutcomes}
+              aria-label="View audit outcomes"
+            >
+              <FaClipboardCheck className="icon" />
+              <span className="btn-text">Audit Outcomes</span>
+            </button>
+          )}
+        </>
+      )}
+    </div>
+  </div>
+</div>
+
+      {dateExtensionRequired && !isEditing && (
+        <div className="warning-banner">
+          <p>Warning: The end date has passed but this audit isn't completed. Please edit to extend the end date.</p>
+        </div>
+      )}
 
       <div className="audit-form">
         {/* type w objective */}
@@ -421,14 +524,19 @@ const handleCancelEditTask = () => {
                 name="endDate"
                 value={editedAudit.endDate ? editedAudit.endDate.split('T')[0] : ""}
                 onChange={handleChange}
+                min={editedAudit.startDate ? editedAudit.startDate.split('T')[0] : ""}
+                className={dateExtensionRequired ? "date-warning" : ""}
               />
             ) : (
               <input
                 type="text"
                 value={editedAudit.endDate ? new Date(editedAudit.endDate).toLocaleDateString() : ""}
                 readOnly
-                className="read-only"
+                className={`read-only ${dateExtensionRequired ? "date-warning" : ""}`}
               />
+            )}
+            {dateExtensionRequired && isEditing && (
+              <p className="warning-text">Please extend the end date as it has already passed</p>
             )}
           </div>
         </div>
@@ -453,6 +561,7 @@ const handleCancelEditTask = () => {
                 name="status"
                 value={editedAudit.status}
                 onChange={handleChange}
+                disabled={!allTasksCompleted && editedAudit.status !== "Completed"}
               >
                 <option value="Pending">Pending</option>
                 <option value="Ongoing">Ongoing</option>
@@ -462,6 +571,9 @@ const handleCancelEditTask = () => {
               <div className={`status-text ${editedAudit.status?.toLowerCase()}`}>
                 {editedAudit.status || ""}
               </div>
+            )}
+            {!allTasksCompleted && editedAudit.status === "Completed" && isEditing && (
+              <p className="warning-text">All tasks must be completed to mark audit as completed</p>
             )}
           </div>
         </div>
@@ -531,132 +643,111 @@ const handleCancelEditTask = () => {
         </div>
       </div>
 
-{/* Tasks */}
-<div className="tasks-section">
-  <div className="tasks-header">
-    <h3>Tasks</h3>
-    <br />
-    {isEditing && (
-      <div className="add-task-container">
-        <input
-          type="text"
-          value={newTask}
-          onChange={(e) => setNewTask(e.target.value)}
-          placeholder="Add new task..."
-          className="form-input"
-        />
-        <button 
-          className="btn btn-add"
-          onClick={handleAddTask}
-          disabled={!newTask.trim()}
-        >
-          Add Task
-        </button>
-      </div>
-    )}
-  </div>
-  
-  {tasks.length > 0 ? (
-    <div className="task-list">
-      {tasks.map((task) => (
-        <div key={task._id} className={`task-item ${editingTaskId === task._id ? 'editing' : ''}`}>
-          {editingTaskId === task._id ? (
-            <div className="task-edit-container">
+      {/* Tasks */}
+      <div className="tasks-section">
+        <div className="tasks-header">
+          <h3>Tasks</h3>
+          <br />
+          {isEditing && (
+            <div className="add-task-container">
               <input
                 type="text"
-                value={editingTaskText}
-                onChange={(e) => setEditingTaskText(e.target.value)}
+                value={newTask}
+                onChange={(e) => setNewTask(e.target.value)}
+                placeholder="Add new task..."
                 className="form-input"
-                autoFocus
               />
-              <select
-                value={editingTaskStatus}
-                onChange={(e) => setEditingTaskStatus(e.target.value)}
-                className="status-select"
+              <button 
+                className="btn btn-add"
+                onClick={handleAddTask}
+                disabled={!newTask.trim()}
               >
-                <option value="Pending">Pending</option>
-                <option value="Ongoing">Ongoing</option>
-                <option value="Completed">Completed</option>
-              </select>
-              <div className="task-edit-actions">
-                <button 
-                  className="btn btn-save"
-                  onClick={() => handleSaveTask(task._id)}
-                  disabled={!editingTaskText.trim()}
-                >
-                  <FaSave />
-                </button>
-                <button 
-                  className="btn btn-cancel"
-                  onClick={handleCancelEditTask}
-                >
-                  <FaTimes />
-                </button>
-              </div>
+                Add Task
+              </button>
             </div>
-          ) : (
-            <>
-              <div className="task-content">
-                <div className="task-text">{task.task}</div>
-                <div className={`task-status ${task.status.toLowerCase()}`}>
-                  {task.status}
-                </div>
-              </div>
-              {isEditing && (
-                <div className="task-actions">
-                  <button 
-                    className="btn-icon"
-                    onClick={() => {
-                      setEditingTaskId(task._id);
-                      setEditingTaskText(task.task);
-                      setEditingTaskStatus(task.status);
-                    }}
-                    title="Edit task"
-                  >
-                    <FaEdit />
-                  </button>
-                  <button 
-                    className="btn-icon btn-delete"
-                    onClick={() => handleDeleteTask(task._id)}
-                    disabled={tasks.length <= 1}
-                    title={tasks.length <= 1 ? "You must keep at least one task" : "Delete task"}
-                  >
-                    <FaTrash />
-                  </button>
-                </div>
-              )}
-            </>
           )}
         </div>
-      ))}
-    </div>
-  ) : (
-    <div className="no-tasks">No tasks assigned to this audit</div>
-  )}
-</div>
-
-      {/* Action buttons */}
-      <div className="action-buttons">
-        {isEditing ? (
-          <>
-            <button className="btn save-btn" onClick={handleSave}>
-              <FaSave className="icon" /> Save
-            </button>
-            <button className="btn cancel-btn" onClick={handleCancel}>
-              <FaTimes className="icon" /> Cancel
-            </button>
-          </>
+        
+        {tasks.length > 0 ? (
+          <div className="task-list">
+            {tasks.map((task) => (
+              <div key={task._id} className={`task-item ${editingTaskId === task._id ? 'editing' : ''}`}>
+                {editingTaskId === task._id ? (
+                  <div className="task-edit-container">
+                    <input
+                      type="text"
+                      value={editingTaskText}
+                      onChange={(e) => setEditingTaskText(e.target.value)}
+                      className="form-input"
+                      autoFocus
+                    />
+                    <select
+                      value={editingTaskStatus}
+                      onChange={(e) => setEditingTaskStatus(e.target.value)}
+                      className="status-select"
+                    >
+                      <option value="Pending">Pending</option>
+                      <option value="Ongoing">Ongoing</option>
+                      <option value="Completed">Completed</option>
+                    </select>
+                    <div className="task-edit-actions">
+                      <button 
+                        className="btn btn-save"
+                        onClick={() => handleSaveTask(task._id)}
+                        disabled={!editingTaskText.trim()}
+                      >
+                        <FaSave />
+                      </button>
+                      <button 
+                        className="btn btn-cancel"
+                        onClick={handleCancelEditTask}
+                      >
+                        <FaTimes />
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <div className="task-content">
+                      <div className="task-text">{task.task}</div>
+                      <div className={`task-status ${task.status.toLowerCase()}`}>
+                        {task.status}
+                      </div>
+                    </div>
+                    {isEditing && (
+                      <div className="task-actions">
+                        <button 
+                          className="btn-icon"
+                          onClick={() => {
+                            setEditingTaskId(task._id);
+                            setEditingTaskText(task.task);
+                            setEditingTaskStatus(task.status);
+                          }}
+                          title="Edit task"
+                        >
+                          <FaEdit />
+                        </button>
+                        <button 
+                          className="btn-icon btn-delete"
+                          onClick={() => handleDeleteTask(task._id)}
+                          disabled={tasks.length <= 1}
+                          title={tasks.length <= 1 ? "You must keep at least one task" : "Delete task"}
+                        >
+                          <FaTrash />
+                        </button>
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+            ))}
+          </div>
         ) : (
-          <>
-            <button className="btn edit-btn" onClick={handleEdit}>
-              <FaEdit className="icon" /> Edit
-            </button>
-            <button className="btn delete-btn" onClick={handleDeleteClick}>
-              <FaTrash className="icon" /> Delete
-            </button>
-          </>
+          <div className="no-tasks">No tasks assigned to this audit</div>
         )}
       </div>
+
+      
 
       {/* Dialogs */}
       <div className={`dialog-overlay ${isDialogOpen || deleteDialogOpen ? 'active' : ''}`}>

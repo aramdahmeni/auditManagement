@@ -4,5 +4,5 @@ const sensitivePointController = require("../controllers/sensitivePointControlle
 
 router.post("/", sensitivePointController.createSensitivePoint);
 router.get("/:outcomeID", sensitivePointController.getSensitivePointByOutcome);
-
+router.put("/edit/:id", sensitivePointController.updateSensitivePoint);
 module.exports = router;

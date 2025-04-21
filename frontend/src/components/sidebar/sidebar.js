@@ -70,12 +70,6 @@ export default function Sidebar() {
     <span>Audit Calendar</span>
   </Link>
 </li>
-<li className={`dropdown-item ${isActive('/audit-history') ? 'active' : ''}`}>
-  <Link to="/audit-history" className="nav-link">
-    <FaHistory className="nav-icon" />
-    <span>Audit History</span>
-  </Link>
-</li>
               </>
             )}
           </ul>
