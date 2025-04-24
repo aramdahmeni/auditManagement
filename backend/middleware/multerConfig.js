@@ -1,34 +1,32 @@
 const multer = require("multer");
 const path = require("path");
 
-// Storage configuration for uploaded files
+// Storage config
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    // Files will be stored in the 'uploads/' directory
     cb(null, "uploads/");
   },
   filename: (req, file, cb) => {
-    // Rename the file with a timestamp to avoid duplicates
     const uniqueSuffix = `${Date.now()}-${file.originalname}`;
     cb(null, uniqueSuffix);
   },
 });
 
-// File filter to validate uploaded files
+//  filter 
 const fileFilter = (req, file, cb) => {
-  const allowedTypes = ["application/pdf", "text/plain"];
+  const allowedTypes = ["application/pdf"];
   if (allowedTypes.includes(file.mimetype)) {
-    cb(null, true); // Accept the file
+    cb(null, true);
   } else {
     cb(new Error("Only PDF and text files are allowed."), false);
   }
 };
 
-// Multer upload middleware
+// middleware
 const upload = multer({
   storage: storage,
   fileFilter: fileFilter,
-  limits: { fileSize: 10 * 1024 * 1024 }, // Limit file size to 10MB
+  limits: { fileSize: 10 * 1024 * 1024 },
 });
 
 module.exports = upload;

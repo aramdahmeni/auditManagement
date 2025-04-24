@@ -1,117 +1,99 @@
-
+/* Main container styles */
 .create-audit-page-wrapper {
-    min-height: 100vh;
     display: flex;
     justify-content: center;
-    align-items: center;
-    padding: 20px;
-    background-color: #f5f7fa; /* Matching your existing background */
-  }
-  
-  /* Modify your existing container (keep all other styles) */
-  .create-audit-container {
-    max-width: 800px;
-    width: 100%;
-    margin: 0; /* Remove any existing margin */
-    /* Keep all your other existing styles */
-  }
-
-.audit-form-header {
-    display: flex;
-    align-items: center;
-    margin-bottom: 20px;
-    padding-bottom: 15px;
-    border-bottom: 1px solid #eee;
+    align-items: flex-start;
+    min-height: 100vh;
+    padding: 2rem;
+    padding-left: 120px;
+    background-color: #f5f7fa;
 }
 
+.create-audit-container {
+    width: 100%;
+    max-width: 900px;
+    background: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    padding: 2rem;
+}
+.error-popup {
+    position: fixed;
+    top: 20%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.6);
+    padding: 20px;
+    border-radius: 8px;
+    color: white;
+    z-index: 1000;
+}
+
+.error-popup-content {
+    text-align: center;
+}
+
+.error-popup button {
+    margin-top: 10px;
+    background: #f44336;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+/* Header styles */
+.audit-form-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #e1e5eb;
+}
+
+.audit-form-header h2 {
+    color: #2c3e50;
+    font-size: 1.8rem;
+    margin: 0;
+}
+
+/* Form styles */
 .audit-form {
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 1.5rem;
 }
 
 .form-group {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 0.5rem;
 }
 
 .form-group label {
     font-weight: 600;
-    color: #333;
-}
-/* Tasks Section Styles */
-.tasks-container {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    margin-top: 10px;
+    color: #34495e;
+    font-size: 0.95rem;
 }
 
-.task-item {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.task-inputs {
-    display: flex;
-    gap: 10px;
-    flex: 1;
-}
-
-.task-inputs input {
-    flex: 2;
-    padding: 8px 12px;
-    border: 1px solid var(--medium-gray);
-    border-radius: var(--border-radius);
-}
-
-.task-inputs select {
-    flex: 1;
-    padding: 8px 12px;
-    border: 1px solid var(--medium-gray);
-    border-radius: var(--border-radius);
-}
-
-.btn-add-task {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    padding: 8px 12px;
-    background-color: var(--primary-color);
-    color: white;
-    border: none;
-    border-radius: var(--border-radius);
-    cursor: pointer;
-    margin-top: 5px;
-}
-
-.btn-remove-task {
-    background: none;
-    border: none;
-    color: var(--danger-color);
-    cursor: pointer;
-    padding: 5px;
-    display: flex;
-    align-items: center;
-}
-
-.btn-remove-task:disabled {
-    color: var(--medium-gray);
-    cursor: not-allowed;
-}
-
-.btn-add-task:hover {
-    background-color: var(--secondary-color);
-}
 .form-group input,
 .form-group select,
 .form-group textarea {
-    padding: 10px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-size: 14px;
+    padding: 0.75rem;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    transition: border-color 0.2s;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: #4f46e5;
+    box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.1);
 }
 
 .form-group textarea {
@@ -121,131 +103,183 @@
 
 .form-row {
     display: flex;
-    gap: 20px;
+    gap: 1.5rem;
 }
 
 .form-row .form-group {
     flex: 1;
 }
 
-.form-actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 15px;
-    margin-top: 20px;
-}
-
-.btn-cancel,
-.btn-upload,
-.btn-submit {
-    display: flex;
+/* Button styles */
+button {
+    display: inline-flex;
     align-items: center;
-    gap: 8px;
-    padding: 10px 15px;
-    border: none;
-    border-radius: 4px;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.25rem;
+    border-radius: 6px;
+    font-weight: 500;
     cursor: pointer;
-    font-weight: 600;
-    transition: background 0.3s;
+    transition: all 0.2s;
+    border: none;
 }
 
 .btn-cancel {
-    background: #f5f5f5;
-    color: #666;
+    background-color: #f3f4f6;
+    color: #6b7280;
 }
 
 .btn-cancel:hover {
-    background: #e0e0e0;
+    background-color: #e5e7eb;
 }
 
-.btn-upload {
-    background: #e3f2fd;
-    color: #1976d2;
-}
-
-.btn-upload:hover {
-    background: #bbdefb;
-}
-
-.btn-submit {
-    background: #4caf50;
+button[type="submit"] {
+    background-color: #4f46e5;
     color: white;
 }
 
-.btn-submit:hover {
-    background: #388e3c;
+button[type="submit"]:hover {
+    background-color: #4338ca;
 }
 
-.loading {
-    text-align: center;
-    padding: 20px;
-    color: #666;
-}
-
-.error {
-    text-align: center;
-    padding: 20px;
-    color: #d32f2f;
-}
-/* Previous styles remain the same, add these new styles: */
-
-.error-message {
-    color: #d32f2f;
-    background: #fde8e8;
-    padding: 10px 15px;
-    border-radius: 4px;
-    margin-bottom: 20px;
-    border-left: 4px solid #d32f2f;
-}
-
-.documents-container {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    margin-bottom: 15px;
-}
-
-.document-item {
-    display: flex;
-    align-items: center;
-    background: #f5f5f5;
-    padding: 5px 10px;
-    border-radius: 4px;
-    font-size: 14px;
-}
-
-.btn-remove {
-    background: none;
-    border: none;
-    color: #d32f2f;
-    cursor: pointer;
-    margin-left: 8px;
-    font-weight: bold;
-    padding: 0 5px;
-}
-
-.btn-upload {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 8px 15px;
-    background: #e3f2fd;
-    color: #1976d2;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background 0.3s;
-}
-
-.btn-upload:hover {
-    background: #bbdefb;
-}
-
-input[type="date"]:invalid {
-    border-color: #d32f2f;
-}
-
-/* Disabled state for buttons */
-.btn-submit:disabled {
-    background: #cccccc;
+button[type="submit"]:disabled {
+    background-color: #a5b4fc;
     cursor: not-allowed;
+}
+
+button[type="button"] {
+    background-color: #f3f4f6;
+    color: #4f46e5;
+}
+
+button[type="button"]:hover {
+    background-color: #e0e7ff;
+}
+
+button[type="button"]:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Comments styles */
+.comments-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.comment-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem;
+    background-color: #f8fafc;
+    border-radius: 6px;
+    border-left: 3px solid #4f46e5;
+}
+
+.comment-item button {
+    padding: 0.25rem 0.5rem;
+    color: #ef4444;
+    background: none;
+}
+
+.comment-item button:hover {
+    background-color: #fee2e2;
+}
+
+.comment-input-group {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.comment-input-group input {
+    flex: 1;
+    padding: 0.75rem;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+}
+
+/* Tasks styles */
+.tasks-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.task-item {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+}
+
+.task-item input[type="text"] {
+    flex: 2;
+}
+
+.task-item select {
+    flex: 1;
+}
+
+.task-item input[type="date"] {
+    flex: 1;
+}
+
+.task-item button {
+    padding: 0.5rem;
+    color: #ef4444;
+}
+
+.task-item button:hover {
+    background-color: #fee2e2;
+}
+
+/* Form actions */
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 1rem;
+}
+
+/* Error message */
+.error-message {
+    padding: 1rem;
+    background-color: #fee2e2;
+    color: #b91c1c;
+    border-radius: 6px;
+    margin-bottom: 1.5rem;
+    border-left: 3px solid #dc2626;
+}
+
+/* Loading state */
+.loading {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    font-size: 1.2rem;
+    color: #4f46e5;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .form-row {
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .task-item {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.5rem;
+    }
+
+    .task-item input,
+    .task-item select {
+        width: 100%;
+    }
+
+    .create-audit-container {
+        padding: 1.5rem;
+    }
 }

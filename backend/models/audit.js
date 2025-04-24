@@ -7,8 +7,8 @@ const AuditSchema = new mongoose.Schema({
   status: { type: String, enum: ["Completed", "Ongoing", "Pending"], default: "pending" },
   startDate: { type: Date, required: true },
   endDate: { type: Date },
-  comment: { type: String },
-  document: { type: String }, 
+  comments: [{ type: mongoose.Schema.Types.ObjectId, ref: "Comment" }],
+  report: { type: String }, 
   tasks: [{ type: mongoose.Schema.Types.ObjectId, ref: "Task" }]
 }, { timestamps: true });
 

@@ -14,13 +14,54 @@ const ReportPage = () => {
   const [reportContent, setReportContent] = useState('');
   const [showReportPanel, setShowReportPanel] = useState(false);
   const [errorMessage, setErrorMessage] = useState(null);
+  const [fileUploading, setFileUploading] = useState(false);
+  const [audit, setAudit] = useState({
+          type: "",
+          objective: "",
+          startDate: "",
+          endDate: "",
+          status: "Pending",
+          auditor: "",
+          comment: ""
+      });
+      const [error, setError] = useState(null);
 
-  const formatDate = (dateString) => {
-    if (!dateString) return 'N/A';
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+      const formatDate = (dateString) => {
+        if (!dateString) return 'N/A';
+        try {
+          const date = new Date(dateString);
+          if (isNaN(date.getTime())) return 'N/A'; // Check for invalid dates
+          return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+        } catch (e) {
+          return 'N/A';
+        }
+      };
+
+      useEffect(() => {
+        console.log("Audit tasks:", auditDetails?.tasks);
+      }, [auditDetails]);
+    // File configuration
+
+  const saveReportToAudit = async (pdfBlob) => {
+    const formData = new FormData();
+    formData.append("report", pdfBlob, `audit-report-${id}.pdf`);
+  
+    try {
+      const response = await fetch(`http://localhost:5000/api/audit/update/${id}`, {
+        method: "PUT",
+        body: formData,
+      });
+  
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Failed to save report.");
+  
+      alert("Report saved to audit successfully!");
+    } catch (err) {
+      console.error(err);
+      setErrorMessage("Failed to save report to audit.");
+    }
   };
-
+  
   const generateReport = () => {
     setShowReportPanel(true);
     setIsGenerating(true);
@@ -33,7 +74,20 @@ AUDIT REPORT
 Audit Type: ${auditDetails?.type || 'N/A'}
 Status: ${auditDetails?.status || 'N/A'}
 Audit Period: ${formatDate(auditDetails?.startDate)} to ${formatDate(auditDetails?.endDate)}
+Auditor: ${auditDetails?.createdBy.name || 'N/A'}
+\n
+Tasks:
+${Array.isArray(auditDetails?.tasks) && auditDetails.tasks.length > 0 
+  ? auditDetails.tasks.map((task, idx) =>
+      `  ${idx + 1}. ${task.task} - ${task.status} - completed: ${formatDate(task.completionDate)}`
+    ).join('\n')
+  : '  No tasks listed.'}
 
+
+
+Overview:
+
+\n
 Overview:
 This report summarizes the key findings identified during the audit. \n The outcomes have been categorized into Non-Conformities (NC), Opportunities for Improvement (OFI), Strengths, and Sensitive Points.
 
@@ -80,19 +134,37 @@ DETAILED FINDINGS
       return paragraph;
     }).join('\n');
 
-    const finalContent = summary + formattedOutcomes + `\n\nEnd of Report.`;
+    const fullReportText = summary + formattedOutcomes;
 
-    let i = 0;
-    const interval = setInterval(() => {
-      if (i < finalContent.length) {
-        setReportContent(prev => prev + finalContent[i]);
-        i++;
-      } else {
-        clearInterval(interval);
-        setIsGenerating(false);
-      }
-    }, 10);
-  };
+// Create a PDF
+const createPDF = async () => {
+  const pdfDoc = await PDFDocument.create();
+  let page = pdfDoc.addPage([600, 800]);  // Changed from const to let
+  const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+  const { width, height } = page.getSize();
+
+  const lines = fullReportText.split('\n');
+  let y = height - 30;
+
+  lines.forEach(line => {
+    if (y < 40) {
+      page = pdfDoc.addPage([600, 800]);  // Reassigning is now allowed
+      y = height - 30;
+    }
+    page.drawText(line, { x: 50, y, size: 10, font, color: rgb(0, 0, 0) });
+    y -= 15;
+  });
+
+  const pdfBytes = await pdfDoc.save();
+  const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+  saveReportToAudit(blob);  // Save the file to the backend
+  setIsGenerating(false);
+  setReportContent(fullReportText);
+};
+
+
+createPDF();
+  }
 
   const handleDownloadPDF = async () => {
     const pdfDoc = await PDFDocument.create();
@@ -190,6 +262,8 @@ DETAILED FINDINGS
         ]);
 
         setAuditDetails(auditData);
+        
+
         setOutcomes(outcomesData);
       } catch (error) {
         console.error("Error fetching data:", error);
@@ -233,17 +307,22 @@ DETAILED FINDINGS
         <br />
         <h2>Audit Report</h2>
       </div>
-
+  
       {!showReportPanel ? (
         <div className="report-dashboard">
-          {/* Existing Summary and Stats */}
+          {/* Audit Overview */}
           <div className="report-summary-card">
             <h3>Audit Overview</h3>
             <div className="summary-grid">
-              <div className="summary-item"><label>Type</label><p>{auditDetails?.type || 'N/A'}</p></div>
+              <div className="summary-item">
+                <label>Type</label>
+                <p>{auditDetails?.type || 'N/A'}</p>
+              </div>
               <div className="summary-item">
                 <label>Status</label>
-                <span className={`status-tag ${auditDetails?.status?.toLowerCase()}`}>{auditDetails?.status || 'N/A'}</span>
+                <span className={`status-tag ${auditDetails?.status?.toLowerCase()}`}>
+                  {auditDetails?.status || 'N/A'}
+                </span>
               </div>
               <div className="summary-item">
                 <label>Period</label>
@@ -251,21 +330,65 @@ DETAILED FINDINGS
               </div>
             </div>
           </div>
-
+  
+          {/* Audit Tasks */}
+          <div className="report-summary-card">
+            <h3>Audit Tasks</h3>
+            <div className="summary-grid">
+            <div className="summary-item">
+  <label>Tasks</label>
+  {Array.isArray(auditDetails?.tasks) && auditDetails.tasks.length > 0 ? (
+    <ul style={{ margin: 0, padding: 0, listStyle: 'none' }}>
+      {auditDetails.tasks.map((task, idx) => (
+        <li key={idx}>
+          <span>{idx + 1}. {task.task} - completed: {formatDate(task.completionDate)}</span>
+        </li>
+      ))}
+    </ul>
+  ) : (
+    <p>No tasks listed.</p>
+  )}
+</div>
+            </div>
+          </div>
+  
+          {/* Findings Stats */}
           <div className="report-stats-section">
             <div className="stats-header">
               <h3>Findings Summary</h3>
               <button className="generate-report-btn" onClick={generateReport} disabled={isGenerating}>
-                {isGenerating ? (<><FaSpinner className="spin" /> Generating...</>) : (<><FaFilePdf /> Generate Report</>)}
+                {isGenerating ? (
+                  <>
+                    <FaSpinner className="spin" /> Generating...
+                  </>
+                ) : (
+                  <>
+                    <FaFilePdf /> Generate Report
+                  </>
+                )}
               </button>
             </div>
             <div className="stats-grid">
-              {/* Stats Cards */}
-              <div className="stat-card"><div className="stat-value">{outcomes.length}</div><div className="stat-label">Total Findings</div></div>
-              <div className="stat-card"><div className="stat-value">{outcomes.filter(o => o.type === 'nc').length}</div><div className="stat-label">Non-Conformities</div></div>
-              <div className="stat-card"><div className="stat-value">{outcomes.filter(o => o.type === 'ofi').length}</div><div className="stat-label">Opportunities</div></div>
-              <div className="stat-card"><div className="stat-value">{outcomes.filter(o => o.type === 'strength').length}</div><div className="stat-label">Strengths</div></div>
-              <div className="stat-card"><div className="stat-value">{outcomes.filter(o => o.type === 'sensitivepoint').length}</div><div className="stat-label">Sensitive Points</div></div>
+              <div className="stat-card">
+                <div className="stat-value">{outcomes.length}</div>
+                <div className="stat-label">Total Findings</div>
+              </div>
+              <div className="stat-card">
+                <div className="stat-value">{outcomes.filter(o => o.type === 'nc').length}</div>
+                <div className="stat-label">Non-Conformities</div>
+              </div>
+              <div className="stat-card">
+                <div className="stat-value">{outcomes.filter(o => o.type === 'ofi').length}</div>
+                <div className="stat-label">Opportunities</div>
+              </div>
+              <div className="stat-card">
+                <div className="stat-value">{outcomes.filter(o => o.type === 'strength').length}</div>
+                <div className="stat-label">Strengths</div>
+              </div>
+              <div className="stat-card">
+                <div className="stat-value">{outcomes.filter(o => o.type === 'sensitivepoint').length}</div>
+                <div className="stat-label">Sensitive Points</div>
+              </div>
             </div>
           </div>
         </div>
@@ -276,7 +399,7 @@ DETAILED FINDINGS
             <div className="panel-actions">
               {!isGenerating && (
                 <button className="download-report-btn" onClick={handleDownloadPDF}>
-                  <FaFilePdf /> Download PDF
+                  <FaFilePdf /> Download & Save PDF
                 </button>
               )}
               <button className="close-panel-btn" onClick={() => setShowReportPanel(false)}>
@@ -284,11 +407,11 @@ DETAILED FINDINGS
               </button>
             </div>
           </div>
-
+  
           <div className="report-console-output">
             <pre>{reportContent || "Initializing report generation..."}</pre>
           </div>
-
+  
           {!isGenerating && (
             <div className="report-complete-message">
               <p>Report generation completed successfully.</p>
@@ -298,6 +421,7 @@ DETAILED FINDINGS
       )}
     </div>
   );
+  
 };
 
 export default ReportPage;

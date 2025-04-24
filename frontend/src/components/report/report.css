@@ -22,7 +22,41 @@
   color: #2c3e50;
   flex-grow: 1;
 }
+/* Add these styles to your existing CSS */
 
+.summary-item {
+  overflow: visible; /* Ensure content isn't clipped */
+}
+
+.summary-item ul {
+  white-space: nowrap; /* Prevent wrapping */
+  overflow-x: visible; /* Allow horizontal overflow */
+  text-overflow: clip; /* Don't ellipsize text */
+}
+
+.summary-item li {
+  display: block; /* Keep each task on its own line */
+  white-space: nowrap; /* Keep task details on one line */
+  overflow: visible; /* Show all content */
+  text-overflow: clip; /* Don't truncate with ellipsis */
+  margin-bottom: 4px; /* Spacing between tasks */
+}
+
+/* Optional: Add horizontal scroll for very long tasks */
+.summary-grid {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+  padding-bottom: 5px; /* Space for scrollbar */
+}
+
+/* Hide scrollbar when not needed */
+.summary-grid::-webkit-scrollbar {
+  height: 4px;
+}
+.summary-grid::-webkit-scrollbar-thumb {
+  background: #ddd;
+  border-radius: 2px;
+}
 .report-back-button {
   background: none;
   border: none;

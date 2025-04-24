@@ -31,6 +31,8 @@ const ncRoutes = require("./routes/nonConformityRoutes");
 const strengthRoutes = require("./routes/strengthRoutes");
 const sensitivePointRoutes = require("./routes/sensitivePointRoutes");
 const ofiRoutes =  require("./routes/ofiRoutes");
+const commentRoutes = require('./routes/commentRoutes');
+
 
 
 
@@ -46,6 +48,7 @@ app.use("/api/strength", strengthRoutes);
 app.use("/api/ofi", ofiRoutes);
 app.use("/api/nonConformity", ncRoutes);
 app.use("/api/cap", capRoutes);
+app.use('/api/comments', commentRoutes);
 
 app.use("/api/user", userRoutes);
 app.use("/api/actionLog", actionLogRoutes);

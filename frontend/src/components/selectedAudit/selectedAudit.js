@@ -1,6 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { FaEdit, FaTrash, FaSave, FaTimes, FaUpload, FaDownload, FaChevronLeft, FaClipboardCheck } from "react-icons/fa";
+import { 
+  FaEdit, FaTrash, FaSave, FaTimes, FaChevronLeft, 
+  FaClipboardCheck, FaFileAlt, FaCalendarAlt 
+} from "react-icons/fa";
+import { toast } from "react-toastify";
+import 'react-toastify/dist/ReactToastify.css';
 import "./selectedAudit.css";
 
 export default function SelectedAudit() {
@@ -11,8 +16,12 @@ export default function SelectedAudit() {
   const [error, setError] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [editedAudit, setEditedAudit] = useState({
-    document: '',
-    newDocument: null
+    type: '',
+    objective: '',
+    status: '',
+    startDate: '',
+    endDate: '',
+    comments: []
   });
   const [validationError, setValidationError] = useState(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -22,22 +31,59 @@ export default function SelectedAudit() {
   const [newTask, setNewTask] = useState("");
   const [editingTaskText, setEditingTaskText] = useState("");
   const [editingTaskStatus, setEditingTaskStatus] = useState('Pending');
+  const [editingCompletionDate, setEditingCompletionDate] = useState("");
   const [dateExtensionRequired, setDateExtensionRequired] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [newComment, setNewComment] = useState("");
+  const [editingCommentId, setEditingCommentId] = useState(null);
+  const [editingCommentText, setEditingCommentText] = useState("");
 
-  // Check if end date has passed and status isn't completed
+  // Format date for display
+  const formatDate = (dateString) => {
+    if (!dateString) return 'Not completed';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { 
+      year: 'numeric', 
+      month: 'short', 
+      day: 'numeric' 
+    });
+  };
+
+  // Check for date conflicts and end date validation
   useEffect(() => {
-    if (audit && !loading) {
+    if (audit && !loading && isEditing) {
+      const checkDateConflict = async () => {
+        try {
+          const response = await fetch(
+            `http://localhost:5000/api/audit/check-date?date=${editedAudit.startDate}&auditId=${id}`
+          );
+          if (!response.ok) {
+            throw new Error("Failed to check date availability");
+          }
+          const { exists } = await response.json();
+          if (exists) {
+            setValidationError("Another audit already exists with this start date. Please choose a different date.");
+            setIsDialogOpen(true);
+          }
+        } catch (error) {
+          console.error("Error checking date:", error);
+        }
+      };
+
+      if (editedAudit.startDate !== audit.startDate) {
+        checkDateConflict();
+      }
+
       const today = new Date();
-      const endDate = new Date(audit.endDate);
+      const endDate = new Date(editedAudit.endDate);
       const isPastDue = endDate < today;
-      const isNotCompleted = audit.status !== "Completed";
+      const isNotCompleted = editedAudit.status !== "Completed";
       
       setDateExtensionRequired(isPastDue && isNotCompleted);
     }
-  }, [audit, loading]);
+  }, [editedAudit.startDate, editedAudit.endDate, editedAudit.status, audit, loading, isEditing, id]);
 
-  //fetch audit
+  // Fetch audit data
   useEffect(() => {
     const fetchAudit = async () => {
       try {
@@ -46,14 +92,26 @@ export default function SelectedAudit() {
           throw new Error("Failed to fetch audit details");
         }
         const data = await response.json();
+        
         setAudit(data);
         setEditedAudit({
-          ...data,
-          newDocument: null
+          type: data.type || '',
+          objective: data.objective || '',
+          status: data.status || '',
+          startDate: data.startDate || '',
+          endDate: data.endDate || '',
+          comments: data.comments || []
         });
         
+        // Set tasks from the audit data
+        if (data.tasks && data.tasks.length > 0) {
+          setTasks(data.tasks);
+        } else {
+          setTasks([]);
+        }
       } catch (error) {
         setError(error.message);
+        toast.error(`Error loading audit: ${error.message}`);
       } finally {
         setLoading(false);
       }
@@ -61,131 +119,211 @@ export default function SelectedAudit() {
     fetchAudit();
   }, [id]);
 
-  //fetch tasks 
-  useEffect(() => {
-    const fetchTasksByAudit = async () => {
-      try {
-        const response = await fetch(`http://localhost:5000/api/task/${id}`);
-        if (!response.ok) {
-          throw new Error("Failed to fetch tasks for this audit");
-        }
-        const data = await response.json();
-        setTasks(data);
-      } catch (error) {
-        console.error("Error fetching tasks:", error);
-        setTasks([]);
-      }
-    }; 
-    fetchTasksByAudit();
-  }, [id]);
-
-  // Check if all tasks are completed
   const allTasksCompleted = tasks.every(task => task.status === "Completed");
+
+  // Task management functions
   const handleAddTask = () => {
-    if (!newTask.trim()) return;
-    const newLocalTask = {
+    if (!newTask.trim()) {
+      toast.warning("Please enter a task description");
+      return;
+    }
+    
+    const newTaskObj = {
+      _id: `temp-${Date.now()}`,
       task: newTask.trim(),
-      status: "Pending"
+      status: "Pending",
+      auditID: id,
+      completionDate: null
     };
   
-    setTasks([...tasks, newLocalTask]);
+    setTasks([...tasks, newTaskObj]);
     setNewTask("");
-  };
-  
-  // Start editing a task
-  const handleStartEditTask = (task) => {
-    setEditingTaskText(task.task);
-    setEditingTaskStatus(task.status); 
+    toast.success("Task added successfully");
   };
 
-  // Save edited task
+  const handleStartEditTask = (task) => {
+    setEditingTaskId(task._id);
+    setEditingTaskText(task.task);
+    setEditingTaskStatus(task.status);
+    setEditingCompletionDate(task.completionDate || "");
+  };
+
   const handleSaveTask = async () => {
-    if (!editingTaskText.trim()) return;
+    if (!editingTaskText.trim()) {
+      toast.warning("Task description cannot be empty");
+      return;
+    }
+
+    // Validate completion date is within audit dates if audit dates exist
+    if (editingTaskStatus === "Completed" && editedAudit.startDate && editedAudit.endDate) {
+      const completionDate = new Date(editingCompletionDate || new Date());
+      const startDate = new Date(editedAudit.startDate);
+      const endDate = new Date(editedAudit.endDate);
+
+      if (completionDate < startDate || completionDate > endDate) {
+        setValidationError(`Task completion date must be between audit start (${formatDate(editedAudit.startDate)}) and end (${formatDate(editedAudit.endDate)}) dates.`);
+        setIsDialogOpen(true);
+        return;
+      }
+    }
 
     try {
-      const response = await fetch(`http://localhost:5000/api/task/${editingTaskId}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ 
-          task: editingTaskText.trim(),
-          status: editingTaskStatus,
-          auditID: id
-        }),
-      });
+      const taskUpdate = {
+        task: editingTaskText.trim(),
+        status: editingTaskStatus,
+        auditID: id
+      };
 
-      if (!response.ok) {
-        throw new Error("Failed to update task");
+      // Only set completion date if task is being marked as completed
+      if (editingTaskStatus === "Completed") {
+        taskUpdate.completionDate = editingCompletionDate || new Date().toISOString();
+      } else {
+        taskUpdate.completionDate = null;
+      }
+
+      // For existing tasks
+      if (!editingTaskId.startsWith('temp-')) {
+        const response = await fetch(`http://localhost:5000/api/task/${editingTaskId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(taskUpdate),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || "Failed to update task");
+        }
       }
 
       setTasks(tasks.map(task => 
         task._id === editingTaskId ? { 
           ...task, 
           task: editingTaskText.trim(),
-          status: editingTaskStatus
+          status: editingTaskStatus,
+          completionDate: editingTaskStatus === "Completed" ? 
+            (editingCompletionDate || new Date().toISOString()) : 
+            null
         } : task
       ));
+      
       setEditingTaskId(null);
+      toast.success("Task updated successfully");
     } catch (error) {
       console.error("Error updating task:", error);
-      setError("Failed to update task");
+      toast.error(`Failed to update task: ${error.message}`);
     }
   };
 
-  // Delete a task
   const handleDeleteTask = async (taskId) => {
     if (tasks.length <= 1) {
-      setError("You must have at least one task");
+      toast.error("You must have at least one task");
       return;
     }
-    try {
-      const response = await fetch(`http://localhost:5000/api/task/${taskId}`, {
-        method: "DELETE",
-      });
 
-      if (!response.ok) {
-        throw new Error("Failed to delete task");
+    try {
+      // Only call API for existing tasks (not temporary ones)
+      if (!taskId.startsWith('temp-')) {
+        const response = await fetch(`http://localhost:5000/api/task/${taskId}`, {
+          method: "DELETE",
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || "Failed to delete task");
+        }
       }
+
       setTasks(tasks.filter(task => task._id !== taskId));
+      toast.success("Task deleted successfully");
     } catch (error) {
       console.error("Error deleting task:", error);
-      setError("Failed to delete task");
+      toast.error(`Failed to delete task: ${error.message}`);
     }
   };
 
-  // Cancel task editing
   const handleCancelEditTask = () => {
     setEditingTaskId(null);
   };
 
-  //edit
+  // Comment management
+  const handleAddComment = () => {
+    if (!newComment.trim()) {
+      toast.warning("Please enter a comment");
+      return;
+    }
+    
+    const newCommentObj = {
+      _id: `temp-comment-${Date.now()}`,
+      text: newComment.trim(),
+      createdAt: new Date().toISOString(),
+      createdBy: "Current User" // Replace with actual user from your auth system
+    };
+
+    setEditedAudit(prev => ({
+      ...prev,
+      comments: [...prev.comments, newCommentObj]
+    }));
+    setNewComment("");
+    toast.success("Comment added successfully");
+  };
+
+  const handleStartEditComment = (comment) => {
+    setEditingCommentId(comment._id);
+    setEditingCommentText(comment.text);
+  };
+
+  const handleSaveComment = () => {
+    if (!editingCommentText.trim()) {
+      toast.warning("Comment cannot be empty");
+      return;
+    }
+
+    setEditedAudit(prev => ({
+      ...prev,
+      comments: prev.comments.map(comment => 
+        comment._id === editingCommentId 
+          ? { ...comment, text: editingCommentText.trim() }
+          : comment
+      )
+    }));
+    
+    setEditingCommentId(null);
+    toast.success("Comment updated successfully");
+  };
+
+  const handleCancelEditComment = () => {
+    setEditingCommentId(null);
+  };
+
+  const handleDeleteComment = (commentId) => {
+    setEditedAudit(prev => ({
+      ...prev,
+      comments: prev.comments.filter(c => c._id !== commentId)
+    }));
+    toast.success("Comment deleted successfully");
+  };
+
+  // Audit CRUD operations
   const handleEdit = () => {
     setIsEditing(true);
   };
 
   const handleSave = async () => {
+    setIsSaving(true);
     try {
-      // Check if date extension is required
-      const today = new Date();
-      const endDate = new Date(editedAudit.endDate);
-      const isPastDue = endDate < today;
-      const isNotCompleted = editedAudit.status !== "Completed";
-      
-      if (isPastDue && isNotCompleted) {
+      // Validation checks
+      if (dateExtensionRequired) {
         setValidationError("The end date has passed but the audit isn't completed. Please extend the end date.");
         setIsDialogOpen(true);
         return;
       }
 
-      // Check if trying to complete audit with incomplete tasks
       if (editedAudit.status === "Completed" && !allTasksCompleted) {
         setValidationError("All tasks must be completed before marking the audit as completed.");
         setIsDialogOpen(true);
         return;
       }
 
-      // Other validators
       if (!editedAudit.startDate || !editedAudit.endDate) {
         setValidationError("Both start and end dates are required.");
         setIsDialogOpen(true);
@@ -200,12 +338,6 @@ export default function SelectedAudit() {
       
       if (!editedAudit.objective || editedAudit.objective.trim().length < 4) {
         setValidationError("Objective must be at least 4 characters long.");
-        setIsDialogOpen(true);
-        return;
-      }
-      
-      if (editedAudit.comment && editedAudit.comment.trim().length > 0 && editedAudit.comment.trim().length < 4) {
-        setValidationError("Comment must be at least 4 characters if provided.");
         setIsDialogOpen(true);
         return;
       }
@@ -225,124 +357,128 @@ export default function SelectedAudit() {
         return;
       }
 
-      const validatedTasks = tasks
-        .filter(task => task.task?.trim() !== '')
+      // Separate new and existing tasks
+      const newTasks = tasks
+        .filter(task => task._id.startsWith('temp-'))
         .map(task => ({
           task: task.task.trim(),
-          status: (task.status || 'pending').toLowerCase(),
+          status: task.status,
           auditID: id,
-          _id: task._id 
+          completionDate: task.completionDate
         }));
-  
-      if (validatedTasks.length === 0) {
-        setError("At least one task is required");
-        return;
-      }
-  
-      const newTasks = validatedTasks.filter(task => !task._id);
-      const existingTasks = validatedTasks.filter(task => task._id);
-  
-      const seen = new Set();
-      const uniqueNewTasks = [];
-      for (const task of newTasks) {
-        if (!seen.has(task.task)) {
-          seen.add(task.task);
-          uniqueNewTasks.push(task);
-        }
-      }
-  
+
+      const existingTasks = tasks
+        .filter(task => !task._id.startsWith('temp-'))
+        .map(task => ({
+          _id: task._id,
+          task: task.task.trim(),
+          status: task.status,
+          auditID: id,
+          completionDate: task.completionDate
+        }));
+
+      // Create new tasks
       const createdTaskIds = [];
-      for (const task of uniqueNewTasks) {
+      for (const task of newTasks) {
         const response = await fetch("http://localhost:5000/api/task", {
           method: "POST",
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            task: task.task,
-            status: task.status,
-            auditID: id
-          })
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(task)
         });
-  
+
         if (!response.ok) {
           const err = await response.json();
           throw new Error(err.error || "Task creation failed");
         }
-  
+
         const newTask = await response.json();
         createdTaskIds.push(newTask._id);
       }
-  
-      const allTaskIds = [
-        ...existingTasks.map(task => task._id.toString()),
-        ...createdTaskIds.map(id => id.toString())
-      ];
-  
-      const formData = new FormData();
-      formData.append("type", editedAudit.type || "");
-      formData.append("objective", editedAudit.objective || "");
-      formData.append("status", editedAudit.status || "");
-      formData.append("startDate", editedAudit.startDate);
-      formData.append("endDate", editedAudit.endDate);
-      formData.append("comment", editedAudit.comment?.trim() || "No comment available");
-  
-      allTaskIds.forEach(id => formData.append("tasks", id));
-  
-      if (editedAudit.newDocument instanceof File) {
-        formData.append("document", editedAudit.newDocument);
-      } else if (editedAudit.document) {
-        formData.append("documentPath", editedAudit.document);
+
+      // Update existing tasks
+      for (const task of existingTasks) {
+        const response = await fetch(`http://localhost:5000/api/task/${task._id}`, {
+          method: "PUT",
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(task)
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to update task");
+        }
       }
-  
+
       // Update the audit
       const updateResponse = await fetch(`http://localhost:5000/api/audit/update/${id}`, {
         method: "PUT",
-        body: formData
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...editedAudit,
+          tasks: [...existingTasks.map(t => t._id), ...createdTaskIds],
+          status: allTasksCompleted ? "Completed" : editedAudit.status
+        })
       });
-  
+
       if (!updateResponse.ok) {
         const errorResponse = await updateResponse.json();
         throw new Error(errorResponse.error || "Failed to update audit");
       }
-  
+
       const data = await updateResponse.json();
-  
-      // Replace new tasks with real ones from backend
-      const updatedTasks = tasks.map(task => {
-        if (!task._id) {
-          const match = uniqueNewTasks.find(t => t.task === task.task);
-          const index = uniqueNewTasks.indexOf(match);
-          return {
-            ...task,
-            _id: createdTaskIds[index]
-          };
+      
+      // Update local state
+      setAudit(data.audit);
+      setEditedAudit({
+        ...data.audit,
+        comments: data.audit.comments || []
+      });
+      
+      // Update tasks with real IDs for newly created ones
+      setTasks(tasks.map(task => {
+        if (task._id.startsWith('temp-')) {
+          const index = newTasks.findIndex(t => t.task === task.task);
+          if (index !== -1) {
+            return {
+              ...task,
+              _id: createdTaskIds[index]
+            };
+          }
         }
         return task;
-      });
-  
-      setTasks(updatedTasks);
-      setAudit(data.audit);
-      setEditedAudit({ ...data.audit, newDocument: null });
+      }));
+
       setIsEditing(false);
       setValidationError(null);
       setError(null);
+      toast.success("Audit updated successfully");
     } catch (error) {
-      console.error("Error updating audit:", error.stack);
+      console.error("Error updating audit:", error);
       setError(error.message || "An unknown error occurred.");
+      toast.error(`Failed to update audit: ${error.message}`);
+    } finally {
+      setIsSaving(false);
     }
   };
-  
+
   const handleCancel = () => {
-    setEditedAudit(audit);
+    setEditedAudit({
+      type: audit.type || '',
+      objective: audit.objective || '',
+      status: audit.status || '',
+      startDate: audit.startDate || '',
+      endDate: audit.endDate || '',
+      comments: audit.comments || []
+    });
+    setTasks(audit.tasks || []);
     setIsEditing(false);
+    toast.info("Changes discarded");
   };
 
   const handleChange = (e) => {
     setEditedAudit({ ...editedAudit, [e.target.name]: e.target.value });
   };
 
-  //audit delete config
+  // Delete audit
   const handleDeleteClick = () => {
     setDeleteDialogOpen(true);
   };
@@ -363,33 +499,20 @@ export default function SelectedAudit() {
       }
 
       navigate("/audits");
+      toast.success("Audit deleted successfully");
     } catch (error) {
       setError(error.message);
+      toast.error(`Failed to delete audit: ${error.message}`);
     }
   };
 
-  //file config
-  const handleFileUpload = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setEditedAudit({ ...editedAudit, newDocument: file });
-    }
-  };
-
-  const handleRemoveDocument = () => {
-    setEditedAudit(prev => ({
-      ...prev,
-      document: '',
-      newDocument: null
-    }));
-  };
-
-  const handleCloseDialog = () => {
-    setIsDialogOpen(false);
-  };
-
+  // Navigation
   const handleNavigateToOutcomes = () => {
     navigate(`/audits/${id}/outcomes`);
+  };
+
+  const handleNavigateToReporting = () => {
+    navigate(`/audits/${id}/report`);
   };
 
   if (loading) return <div className="loading-state">Loading...</div>;
@@ -398,71 +521,81 @@ export default function SelectedAudit() {
   return (
     <div className="selected-audit-container">
       <div className="audit-header">
-  <div className="header-content">
-    <button 
-      className="back-button"
-      onClick={() => navigate("/audits")}
-      aria-label="Back to audits"
-    >
-      <FaChevronLeft className="header-arrow" />
-      <span className="header-title">Audit Details</span>
-    </button>
-    
-    <div className="action-buttons">
-      {isEditing ? (
-        <>
+        <div className="header-content">
           <button 
-            className="btn save-btn"
-            onClick={handleSave}
-            disabled={isSaving}
-            aria-label="Save changes"
+            className="back-button"
+            onClick={() => navigate("/audits")}
+            aria-label="Back to audits"
           >
-            <FaSave className="icon" />
-            <span className="btn-text">{isSaving ? 'Saving...' : 'Save'}</span>
+            <FaChevronLeft className="header-arrow" />
+            <span className="header-title">Audit Details</span>
           </button>
-          <button 
-            className="btn cancel-btn"
-            onClick={handleCancel}
-            disabled={isSaving}
-            aria-label="Cancel editing"
-          >
-            <FaTimes className="icon" />
-            <span className="btn-text">Cancel</span>
-          </button>
-        </>
-      ) : (
-        <>
-          <button 
-            className="btn edit-btn"
-            onClick={handleEdit}
-            aria-label="Edit audit"
-          >
-            <FaEdit className="icon" />
-            <span className="btn-text">Edit</span>
-          </button>
-          <button 
-            className="btn delete-btn"
-            onClick={handleDeleteClick}
-            aria-label="Delete audit"
-          >
-            <FaTrash className="icon" />
-            <span className="btn-text">Delete</span>
-          </button>
-          {audit?.status === "Completed" && (
-            <button 
-              className="btn outcomes-btn"
-              onClick={handleNavigateToOutcomes}
-              aria-label="View audit outcomes"
-            >
-              <FaClipboardCheck className="icon" />
-              <span className="btn-text">Audit Outcomes</span>
-            </button>
-          )}
-        </>
-      )}
-    </div>
-  </div>
-</div>
+          
+          <div className="action-buttons">
+            {isEditing ? (
+              <>
+                <button 
+                  className="btn save-btn"
+                  onClick={handleSave}
+                  disabled={isSaving}
+                  aria-label="Save changes"
+                >
+                  <FaSave className="icon" />
+                  <span className="btn-text">{isSaving ? 'Saving...' : 'Save'}</span>
+                </button>
+                <button 
+                  className="btn cancel-btn"
+                  onClick={handleCancel}
+                  disabled={isSaving}
+                  aria-label="Cancel editing"
+                >
+                  <FaTimes className="icon" />
+                  <span className="btn-text">Cancel</span>
+                </button>
+              </>
+            ) : (
+              <>
+                <button 
+                  className="btn edit-btn"
+                  onClick={handleEdit}
+                  aria-label="Edit audit"
+                >
+                  <FaEdit className="icon" />
+                  <span className="btn-text">Edit</span>
+                </button>
+                <button 
+                  className="btn delete-btn"
+                  onClick={handleDeleteClick}
+                  aria-label="Delete audit"
+                >
+                  <FaTrash className="icon" />
+                  <span className="btn-text">Delete</span>
+                </button>
+                {audit?.status === "Completed" && (
+                  <>
+                    <button 
+                      className="btn outcomes-btn"
+                      onClick={handleNavigateToOutcomes}
+                      aria-label="View audit outcomes"
+                    >
+                      <FaClipboardCheck className="icon" />
+                      <span className="btn-text">Audit Outcomes</span>
+                    </button>
+                    <button 
+                      className="btn reporting-btn"
+                      onClick={handleNavigateToReporting}
+                      aria-label="Generate audit report"
+                    >
+                      <FaFileAlt className="icon" />
+                      <span className="btn-text">Generate Report</span>
+                    </button>
+                  </>
+                )}
+              </>
+            )}
+          </div>
+        </div>
+      </div>
 
       {dateExtensionRequired && !isEditing && (
         <div className="warning-banner">
@@ -471,12 +604,13 @@ export default function SelectedAudit() {
       )}
 
       <div className="audit-form">
-        {/* type w objective */}
         <div className="form-row">
           <div className="form-group">
             <label>Audit Type</label>
-            <input type="text" name="type"
-              value={editedAudit.type || ""}
+            <input 
+              type="text" 
+              name="type"
+              value={editedAudit.type}
               onChange={handleChange}
               readOnly={!isEditing}
               className={!isEditing ? "read-only" : ""}
@@ -487,7 +621,7 @@ export default function SelectedAudit() {
             <label>Objective</label>
             <input
               name="objective"
-              value={editedAudit.objective || ""}
+              value={editedAudit.objective}
               onChange={handleChange}
               readOnly={!isEditing}
               className={!isEditing ? "read-only" : ""}
@@ -495,7 +629,6 @@ export default function SelectedAudit() {
           </div>
         </div>
 
-        {/* dates */}
         <div className="form-row">
           <div className="form-group">
             <label>Start Date</label>
@@ -505,6 +638,7 @@ export default function SelectedAudit() {
                 name="startDate"
                 value={editedAudit.startDate ? editedAudit.startDate.split('T')[0] : ""}
                 onChange={handleChange}
+                required
               />
             ) : (
               <input
@@ -526,6 +660,7 @@ export default function SelectedAudit() {
                 onChange={handleChange}
                 min={editedAudit.startDate ? editedAudit.startDate.split('T')[0] : ""}
                 className={dateExtensionRequired ? "date-warning" : ""}
+                required
               />
             ) : (
               <input
@@ -541,14 +676,13 @@ export default function SelectedAudit() {
           </div>
         </div>
 
-        {/* created w status */}
         <div className="form-row">
           <div className="form-group">
             <label>Created By</label>
             <input
               type="text"
               name="createdBy"
-              value={editedAudit.createdBy?.username || ""}
+              value={audit?.createdBy?.username || ""}
               readOnly
               className="read-only"
             />
@@ -578,76 +712,100 @@ export default function SelectedAudit() {
           </div>
         </div>
 
-        {/* comments */}
+        {/* Comments Section */}
         <div className="form-row-full">
           <div className="form-group">
             <label>Comments</label>
-            <textarea
-              name="comment"
-              value={editedAudit.comment || "No comment available"}
-              onChange={handleChange}
-              readOnly={!isEditing}
-              className={!isEditing ? "read-only" : ""}
-              rows="3"
-            />
-          </div>
-        </div>
-
-        {/* doc */}
-        <div className="form-row-full">
-          <div className="form-group">
-            <label>Documents</label>
-            {isEditing ? (
-              <div className="file-upload-container">
-                <div className="file-upload">
-                  <input
-                    type="file"
-                    onChange={handleFileUpload}
-                    id="file-upload-input"
-                  />
-                  <label htmlFor="file-upload-input" className="upload-button">
-                    <FaUpload className="icon" />
-                    <span>
-                      {editedAudit.newDocument
-                        ? editedAudit.newDocument.name
-                        : "Select new file"}
-                    </span>
-                  </label>
-                </div>
-                {editedAudit.document && !editedAudit.newDocument && (
-                  <div className="file-info">
-                    <span>Current file: {editedAudit.document.split('/').pop()}</span>
-                    <button
-                      type="button"
-                      className="remove-file-button"
-                      onClick={handleRemoveDocument}
-                    >
-                      Remove
-                    </button>
-                  </div>
-                )}
+            {isEditing && (
+              <div className="comment-input-container">
+                <textarea
+                  value={newComment}
+                  onChange={(e) => setNewComment(e.target.value)}
+                  placeholder="Add a new comment..."
+                  rows="2"
+                  className="comment-input"
+                />
+                <button
+                  className="btn btn-add-comment"
+                  onClick={handleAddComment}
+                  disabled={!newComment.trim()}
+                >
+                  Add Comment
+                </button>
               </div>
-            ) : editedAudit.document ? (
-              <a
-                href={`http://localhost:5000/${editedAudit.document}`}
-                download={editedAudit.document.split('/').pop()}
-                className="document-link"
-              >
-                <FaDownload className="icon" />
-                {editedAudit.document.split('/').pop()}
-              </a>
-            ) : (
-              <div className="no-document">No document available</div>
             )}
+            
+            <div className="comments-list">
+              {editedAudit.comments.length > 0 ? (
+                editedAudit.comments.map((comment) => (
+                  <div key={comment._id} className="comment-item">
+                    {editingCommentId === comment._id ? (
+                      <div className="comment-edit-container">
+                        <textarea
+                          value={editingCommentText}
+                          onChange={(e) => setEditingCommentText(e.target.value)}
+                          className="comment-edit-input"
+                          rows="2"
+                        />
+                        <div className="comment-edit-actions">
+                          <button
+                            className="btn-icon btn-save-comment"
+                            onClick={handleSaveComment}
+                            disabled={!editingCommentText.trim()}
+                          >
+                            <FaSave />
+                          </button>
+                          <button
+                            className="btn-icon btn-cancel-comment"
+                            onClick={handleCancelEditComment}
+                          >
+                            <FaTimes />
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="comment-content">
+                        <p className="comment-text">{comment.text}</p>
+                        <div className="comment-meta">
+                          <span className="comment-author">{comment.createdBy}</span>
+                          <span className="comment-date">
+                            {new Date(comment.createdAt).toLocaleString()}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                    {isEditing && editingCommentId !== comment._id && (
+                      <div className="comment-actions">
+                        <button
+                          className="btn-icon btn-edit-comment"
+                          onClick={() => handleStartEditComment(comment)}
+                          title="Edit comment"
+                        >
+                          <FaEdit />
+                        </button>
+                        <button
+                          className="btn-icon btn-delete-comment"
+                          onClick={() => handleDeleteComment(comment._id)}
+                          title="Delete comment"
+                        >
+                          <FaTrash />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                ))
+              ) : (
+                <div className="no-comments">No comments yet</div>
+              )}
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Tasks */}
+      {/* Tasks Section */}
       <div className="tasks-section">
         <div className="tasks-header">
           <h3>Tasks</h3>
-          <br />
           {isEditing && (
             <div className="add-task-container">
               <input
@@ -690,10 +848,24 @@ export default function SelectedAudit() {
                       <option value="Ongoing">Ongoing</option>
                       <option value="Completed">Completed</option>
                     </select>
+                    {editingTaskStatus === "Completed" && (
+                      <div className="completion-date-input">
+                        <FaCalendarAlt className="calendar-icon" />
+                        <input
+                          type="date"
+                          value={editingCompletionDate ? editingCompletionDate.split('T')[0] : new Date().toISOString().split('T')[0]}
+                          onChange={(e) => setEditingCompletionDate(e.target.value)}
+                          min={editedAudit.startDate ? editedAudit.startDate.split('T')[0] : ""}
+                          max={editedAudit.endDate ? editedAudit.endDate.split('T')[0] : ""}
+                          className="date-input"
+                        />
+                      </div>
+                    )}
+                    
                     <div className="task-edit-actions">
                       <button 
                         className="btn btn-save"
-                        onClick={() => handleSaveTask(task._id)}
+                        onClick={handleSaveTask}
                         disabled={!editingTaskText.trim()}
                       >
                         <FaSave />
@@ -713,16 +885,18 @@ export default function SelectedAudit() {
                       <div className={`task-status ${task.status.toLowerCase()}`}>
                         {task.status}
                       </div>
+                      {task.status === "Completed" && task.completionDate && (
+                        <div className="task-completion-date">
+                          <FaCalendarAlt className="calendar-icon" />
+                          {formatDate(task.completionDate)}
+                        </div>
+                      )}
                     </div>
                     {isEditing && (
                       <div className="task-actions">
                         <button 
                           className="btn-icon"
-                          onClick={() => {
-                            setEditingTaskId(task._id);
-                            setEditingTaskText(task.task);
-                            setEditingTaskStatus(task.status);
-                          }}
+                          onClick={() => handleStartEditTask(task)}
                           title="Edit task"
                         >
                           <FaEdit />
@@ -747,8 +921,6 @@ export default function SelectedAudit() {
         )}
       </div>
 
-      
-
       {/* Dialogs */}
       <div className={`dialog-overlay ${isDialogOpen || deleteDialogOpen ? 'active' : ''}`}>
         {isDialogOpen && (
@@ -756,7 +928,7 @@ export default function SelectedAudit() {
             <h3>Validation Error</h3>
             <p>{validationError}</p>
             <div className="dialog-actions">
-              <button className="btn primary-btn" onClick={handleCloseDialog}>
+              <button className="btn primary-btn" onClick={() => setIsDialogOpen(false)}>
                 OK
               </button>
             </div>
