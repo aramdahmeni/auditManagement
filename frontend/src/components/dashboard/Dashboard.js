@@ -7,7 +7,7 @@ import {
 import {
   FiActivity, FiCheckCircle, FiClock,
   FiAlertCircle, FiTrendingUp, FiCalendar,
-  FiLayers, FiClock as FiTime
+  FiLayers, FiClock as FiTime, FiBarChart2, FiAward, FiPieChart
 } from "react-icons/fi";
 import { motion } from "framer-motion";
 import "./Dashboard.css";
@@ -25,15 +25,18 @@ export default function Dashboard() {
     onTimeCompletionRate: 0,
     overdueAudits: 0,
     avgTasksPerAudit: 0,
-    avgTaskResolutionTime: 0
+    avgTaskResolutionTime: 0,
+    averageOutcomes: 0,
+    mostCommonOutcome: { name: 'No data', count: 0 },
+    outcomeDistribution: []
   });
+
   const [pieData, setPieData] = useState([]);
   const [barData, setBarData] = useState([]);
   const [recentActivities, setRecentActivities] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // simple average helper
   const avg = arr => arr.length ? (arr.reduce((a, b) => a + b, 0) / arr.length) : 0;
 
   useEffect(() => {
@@ -46,11 +49,11 @@ export default function Dashboard() {
         const now = new Date();
         const total = audits.length;
         const completedList = audits.filter(a => a.status.toLowerCase() === "completed");
-        const ongoingList   = audits.filter(a => a.status.toLowerCase() === "ongoing");
-        const pendingList   = audits.filter(a => a.status.toLowerCase() === "pending");
-        const completed     = completedList.length;
-        const ongoing       = ongoingList.length;
-        const pending       = pendingList.length;
+        const ongoingList = audits.filter(a => a.status.toLowerCase() === "ongoing");
+        const pendingList = audits.filter(a => a.status.toLowerCase() === "pending");
+        const completed = completedList.length;
+        const ongoing = ongoingList.length;
+        const pending = pendingList.length;
         const completionRate = total ? ((completed / total) * 100).toFixed(1) : 0;
 
         // Avg Audit Duration (days)
@@ -91,15 +94,37 @@ export default function Dashboard() {
         });
         const avgTaskResolutionTime = +avg(taskResTimes).toFixed(1);
 
+        // Outcome calculations
+        const allOutcomes = audits.flatMap(a => a.outcomes || []);
+        const outcomeCounts = {};
+        allOutcomes.forEach(o => {
+          outcomeCounts[o] = (outcomeCounts[o] || 0) + 1;
+        });
+
+        const outcomeEntries = Object.entries(outcomeCounts);
+        const averageOutcomes = audits.length ? (allOutcomes.length / audits.length).toFixed(1) : 0;
+        
+        let mostCommonOutcome = { name: 'No data', count: 0 };
+        if (outcomeEntries.length) {
+          const [name, count] = outcomeEntries.reduce((a, b) => a[1] > b[1] ? a : b);
+          mostCommonOutcome = { name, count };
+        }
+
+        const outcomeDistribution = outcomeEntries.map(([name, count]) => ({
+          name,
+          count
+        }));
+
         // Pie data
         const pie = [
           { name: "Completed", value: completed },
-          { name: "Ongoing",   value: ongoing },
-          { name: "Pending",   value: pending }
+          { name: "Ongoing", value: ongoing },
+          { name: "Pending", value: pending }
         ];
 
         // Bar data: by createdAt month
-        const monthNames = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+        const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", 
+                          "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
         const countsByMonth = Array(12).fill(0);
         audits.forEach(a => {
           const d = new Date(a.createdAt || a.startDate);
@@ -122,8 +147,12 @@ export default function Dashboard() {
           onTimeCompletionRate,
           overdueAudits,
           avgTasksPerAudit,
-          avgTaskResolutionTime
+          avgTaskResolutionTime,
+          averageOutcomes,
+          mostCommonOutcome,
+          outcomeDistribution
         });
+
         setPieData(pie);
         setBarData(bar);
         setRecentActivities(recent);
@@ -144,6 +173,7 @@ export default function Dashboard() {
       <p>Loading data…</p>
     </div>
   );
+
   if (error) return (
     <div className="dashboard-container">
       <p className="error-message">Error: {error}</p>
@@ -151,16 +181,19 @@ export default function Dashboard() {
   );
 
   const cardData = [
-    { icon: <FiActivity/>, label: "Total Audits",         value: stats.totalAudits },
-    { icon: <FiCheckCircle/>, label: "Completed",         value: stats.completedAudits },
-    { icon: <FiClock/>,       label: "Pending",           value: stats.pendingAudits },
-    { icon: <FiAlertCircle/>, label: "Ongoing",           value: stats.ongoingAudits },
-    { icon: <FiTrendingUp/>,  label: "Completion Rate",   value: `${stats.completionRate}%` },
-    { icon: <FiCalendar/>,    label: "Avg Audit Duration (d)", value: stats.averageAuditDuration },
-    { icon: <FiCheckCircle/>, label: "On-Time Rate",      value: `${stats.onTimeCompletionRate}%` },
-    { icon: <FiAlertCircle/>, label: "Overdue Audits",    value: stats.overdueAudits },
-    { icon: <FiLayers/>,      label: "Avg Tasks/Audit",   value: stats.avgTasksPerAudit },
-    { icon: <FiTime/>,        label: "Avg Task Resolution (d)", value: stats.avgTaskResolutionTime }
+    { icon: <FiActivity/>, label: "Total Audits", value: stats.totalAudits },
+    { icon: <FiCheckCircle/>, label: "Completed", value: stats.completedAudits },
+    { icon: <FiClock/>, label: "Pending", value: stats.pendingAudits },
+    { icon: <FiAlertCircle/>, label: "Ongoing", value: stats.ongoingAudits },
+    { icon: <FiTrendingUp/>, label: "Completion Rate", value: `${stats.completionRate}%` },
+    { icon: <FiCalendar/>, label: "Avg Duration (d)", value: stats.averageAuditDuration },
+    { icon: <FiCheckCircle/>, label: "On-Time Rate", value: `${stats.onTimeCompletionRate}%` },
+    { icon: <FiAlertCircle/>, label: "Overdue Audits", value: stats.overdueAudits },
+    { icon: <FiLayers/>, label: "Avg Tasks/Audit", value: stats.avgTasksPerAudit },
+    { icon: <FiTime/>, label: "Avg Resolution (d)", value: stats.avgTaskResolutionTime },
+    { icon: <FiBarChart2 />, label: "Avg Outcomes/Audit", value: stats.averageOutcomes },
+    { icon: <FiAward />, label: "Most Common Outcome", 
+      value: `${stats.mostCommonOutcome.name} (${stats.mostCommonOutcome.count})` }
   ];
 
   const cardVariants = { hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } };
@@ -241,6 +274,20 @@ export default function Dashboard() {
             </BarChart>
           </ResponsiveContainer>
         </motion.div>
+
+        <motion.div className="chart"
+          variants={chartVariants} initial="hidden" animate="visible"
+          transition={{ delay: 0.4 }}>
+          <h3><FiPieChart /> Outcome Distribution</h3>
+          <ResponsiveContainer width="100%" height={260}>
+            <BarChart data={stats.outcomeDistribution}>
+              <XAxis dataKey="name" />
+              <YAxis allowDecimals={false} />
+              <Tooltip formatter={(v) => [`${v} occurrences`, "Count"]} />
+              <Bar dataKey="count" name="Occurrences" fill="#3182ce" />
+            </BarChart>
+          </ResponsiveContainer>
+        </motion.div>
       </div>
 
       <motion.div className="latest-activities"
@@ -248,7 +295,7 @@ export default function Dashboard() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.5 }}
       >
-        <h3>🕓 Latest Activities</h3>
+        <h3>Latest Activities</h3>
         <ul>
           {recentActivities.map(a => (
             <li key={a._id}>

@@ -7,6 +7,7 @@ exports.createAudit = async (req, res) => {
   try {
     const { type, objective, startDate, endDate, status, createdBy } = req.body;
 
+    // === Parse tasks ===
     let parsedTasks = [];
     try {
       parsedTasks = JSON.parse(req.body.tasks || "[]");
@@ -15,6 +16,7 @@ exports.createAudit = async (req, res) => {
       return res.status(400).json({ error: "Invalid tasks format" });
     }
 
+    // === Parse comments ===
     let parsedComments = [];
     try {
       parsedComments = JSON.parse(req.body.comments || "[]");
@@ -23,6 +25,7 @@ exports.createAudit = async (req, res) => {
       return res.status(400).json({ error: "Invalid comments format" });
     }
 
+    // === Create audit ===
     const newAudit = new Audit({
       type,
       objective,
@@ -37,49 +40,64 @@ exports.createAudit = async (req, res) => {
 
     const savedAudit = await newAudit.save();
 
-    // Save tasks
+    // === Save tasks ===
     const taskPromises = parsedTasks.map(taskData =>
       new Task({
         auditID: savedAudit._id,
         task: taskData.task,
         status: taskData.status || 'pending',
-        completionDate: taskData.status === 'completed' && taskData.completionDate
-          ? new Date(taskData.completionDate)
-          : null
+        completionDate:
+          taskData.status === 'completed' && taskData.completionDate
+            ? new Date(taskData.completionDate)
+            : null,
       }).save()
     );
-    
     const savedTasks = await Promise.all(taskPromises);
     savedAudit.tasks = savedTasks.map(task => task._id);
 
-    // Save comments
-    const commentPromises = parsedComments.map(commentData =>
-      new Comment({
-        comment: commentData.comment,
-        author: commentData.author,
-        audit: savedAudit._id,
-        createdAt: new Date(),
-      }).save()
-    );
-    const savedComments = await Promise.all(commentPromises);
-    savedAudit.comments = savedComments.map(comment => comment._id);
+    // === Save comments (with validation) ===
+    const commentIds = [];
+    for (const commentData of parsedComments) {
+      if (!commentData.comment || !commentData.author) {
+        console.warn("Skipping invalid comment:", commentData);
+        continue;
+      }
+      try {
+        const newComment = new Comment({
+          comment: commentData.comment,
+          author: commentData.author,
+          auditId: savedAudit._id,  // Match the schema field name
+        });
+        const saved = await newComment.save();
+        commentIds.push(saved._id);
+      } catch (err) {
+        console.error("Failed to save comment:", err.message);
+      }
+    }
 
+    savedAudit.comments = commentIds;
     await savedAudit.save();
 
+    // === Populate result ===
     const result = await Audit.findById(savedAudit._id)
-      .populate('tasks')
-      .populate('createdBy', 'name email')
+      .populate("tasks")
+      .populate("createdBy", "name email")
       .populate({
-        path: 'comments',
-        populate: { path: 'author', select: 'name email' },
+        path: "comments",
+        populate: {
+          path: "author",
+          select: "name email",
+        },
       });
+
+    console.log("Created Audit with populated comments:", result.comments);
 
     res.status(201).json(result);
   } catch (error) {
     console.error("Audit creation error:", error);
     res.status(500).json({
       error: "Audit creation failed",
-      details: process.env.NODE_ENV === 'development' ? error.message : undefined,
+      details: process.env.NODE_ENV === "development" ? error.message : undefined,
     });
   }
 };

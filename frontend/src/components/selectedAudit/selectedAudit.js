@@ -6,6 +6,7 @@ import {
 } from "react-icons/fa";
 import { toast } from "react-toastify";
 import 'react-toastify/dist/ReactToastify.css';
+
 import "./selectedAudit.css";
 
 export default function SelectedAudit() {
@@ -35,8 +36,6 @@ export default function SelectedAudit() {
   const [dateExtensionRequired, setDateExtensionRequired] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [newComment, setNewComment] = useState("");
-  const [editingCommentId, setEditingCommentId] = useState(null);
-  const [editingCommentText, setEditingCommentText] = useState("");
 
   // Format date for display
   const formatDate = (dateString) => {
@@ -154,19 +153,6 @@ export default function SelectedAudit() {
       return;
     }
 
-    // Validate completion date is within audit dates if audit dates exist
-    if (editingTaskStatus === "Completed" && editedAudit.startDate && editedAudit.endDate) {
-      const completionDate = new Date(editingCompletionDate || new Date());
-      const startDate = new Date(editedAudit.startDate);
-      const endDate = new Date(editedAudit.endDate);
-
-      if (completionDate < startDate || completionDate > endDate) {
-        setValidationError(`Task completion date must be between audit start (${formatDate(editedAudit.startDate)}) and end (${formatDate(editedAudit.endDate)}) dates.`);
-        setIsDialogOpen(true);
-        return;
-      }
-    }
-
     try {
       const taskUpdate = {
         task: editingTaskText.trim(),
@@ -265,34 +251,6 @@ export default function SelectedAudit() {
     }));
     setNewComment("");
     toast.success("Comment added successfully");
-  };
-
-  const handleStartEditComment = (comment) => {
-    setEditingCommentId(comment._id);
-    setEditingCommentText(comment.text);
-  };
-
-  const handleSaveComment = () => {
-    if (!editingCommentText.trim()) {
-      toast.warning("Comment cannot be empty");
-      return;
-    }
-
-    setEditedAudit(prev => ({
-      ...prev,
-      comments: prev.comments.map(comment => 
-        comment._id === editingCommentId 
-          ? { ...comment, text: editingCommentText.trim() }
-          : comment
-      )
-    }));
-    
-    setEditingCommentId(null);
-    toast.success("Comment updated successfully");
-  };
-
-  const handleCancelEditComment = () => {
-    setEditingCommentId(null);
   };
 
   const handleDeleteComment = (commentId) => {
@@ -739,58 +697,23 @@ export default function SelectedAudit() {
               {editedAudit.comments.length > 0 ? (
                 editedAudit.comments.map((comment) => (
                   <div key={comment._id} className="comment-item">
-                    {editingCommentId === comment._id ? (
-                      <div className="comment-edit-container">
-                        <textarea
-                          value={editingCommentText}
-                          onChange={(e) => setEditingCommentText(e.target.value)}
-                          className="comment-edit-input"
-                          rows="2"
-                        />
-                        <div className="comment-edit-actions">
-                          <button
-                            className="btn-icon btn-save-comment"
-                            onClick={handleSaveComment}
-                            disabled={!editingCommentText.trim()}
-                          >
-                            <FaSave />
-                          </button>
-                          <button
-                            className="btn-icon btn-cancel-comment"
-                            onClick={handleCancelEditComment}
-                          >
-                            <FaTimes />
-                          </button>
-                        </div>
+                    <div className="comment-content">
+                      <p className="comment-text">{comment.text}</p>
+                      <div className="comment-meta">
+                        <span className="comment-author">{comment.createdBy}</span>
+                        <span className="comment-date">
+                          {new Date(comment.createdAt).toLocaleString()}
+                        </span>
                       </div>
-                    ) : (
-                      <div className="comment-content">
-                        <p className="comment-text">{comment.text}</p>
-                        <div className="comment-meta">
-                          <span className="comment-author">{comment.createdBy}</span>
-                          <span className="comment-date">
-                            {new Date(comment.createdAt).toLocaleString()}
-                          </span>
-                        </div>
-                      </div>
-                    )}
-                    {isEditing && editingCommentId !== comment._id && (
-                      <div className="comment-actions">
-                        <button
-                          className="btn-icon btn-edit-comment"
-                          onClick={() => handleStartEditComment(comment)}
-                          title="Edit comment"
-                        >
-                          <FaEdit />
-                        </button>
-                        <button
-                          className="btn-icon btn-delete-comment"
-                          onClick={() => handleDeleteComment(comment._id)}
-                          title="Delete comment"
-                        >
-                          <FaTrash />
-                        </button>
-                      </div>
+                    </div>
+                    {isEditing && (
+                      <button
+                        className="btn-icon btn-delete-comment"
+                        onClick={() => handleDeleteComment(comment._id)}
+                        title="Delete comment"
+                      >
+                        <FaTrash />
+                      </button>
                     )}
                   </div>
                 ))
@@ -855,8 +778,6 @@ export default function SelectedAudit() {
                           type="date"
                           value={editingCompletionDate ? editingCompletionDate.split('T')[0] : new Date().toISOString().split('T')[0]}
                           onChange={(e) => setEditingCompletionDate(e.target.value)}
-                          min={editedAudit.startDate ? editedAudit.startDate.split('T')[0] : ""}
-                          max={editedAudit.endDate ? editedAudit.endDate.split('T')[0] : ""}
                           className="date-input"
                         />
                       </div>

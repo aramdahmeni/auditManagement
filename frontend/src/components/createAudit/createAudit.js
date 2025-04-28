@@ -47,12 +47,11 @@ export default function CreateAudit() {
     };
 
     const addComment = () => {
-
         const trimmed = newComment.trim();
         if (trimmed.length < 5) {
-    setError("Comments must be at least 5 characters long.");
-    return;
-}
+            setError("Comments must be at least 5 characters long.");
+            return;
+        }
         if (
             trimmed &&
             !audit.comments.includes(trimmed) &&
@@ -73,8 +72,6 @@ export default function CreateAudit() {
     };
 
     const addTask = () => {
-        
-
         if (tasks.length >= 5) return;
         setTasks([...tasks, { task: "", status: "pending", completionDate: "" }]);
     };
@@ -107,11 +104,12 @@ export default function CreateAudit() {
             setError("Start date must be before end date");
             return;
         }
+
         if (audit.objective.trim().length < 10) {
             setError("Objective must be at least 10 characters long.");
             return;
         }
-        
+
         const start = new Date(audit.startDate);
         const end = new Date(audit.endDate);
         const diffDays = (end - start) / (1000 * 60 * 60 * 24);
@@ -119,7 +117,7 @@ export default function CreateAudit() {
             setError("The audit must last at least 1 day.");
             return;
         }
-        
+
         const trimmedTasks = tasks.map(t => ({
             task: t.task.trim(),
             status: (t.status || "pending").toLowerCase(),
@@ -137,6 +135,13 @@ export default function CreateAudit() {
             return;
         }
 
+        const trimmedComments = (audit.comments || []).map(c => {
+            return { 
+              comment: c.trim(), 
+              author: "67e94905ac5b7e235be0371f" // Use the same ID as createdBy
+            };
+          }).filter(c => c && c.comment.length > 0);
+
         setLoading(true);
         setError(null);
 
@@ -147,9 +152,9 @@ export default function CreateAudit() {
             formData.append("startDate", audit.startDate);
             formData.append("endDate", audit.endDate);
             formData.append("status", audit.status);
-            formData.append("createdBy", "67e94905ac5b7e235be0371f");
+            formData.append("createdBy", "67e94905ac5b7e235be0371f"); // keep your user ID
             formData.append("tasks", JSON.stringify(trimmedTasks));
-            formData.append("comments", JSON.stringify(audit.comments));
+            formData.append("comments", JSON.stringify(trimmedComments));
 
             if (audit.report) {
                 formData.append("report", audit.report.file);
@@ -330,7 +335,6 @@ export default function CreateAudit() {
                                         placeholder="Task description"
                                         value={task.task}
                                         onChange={(e) => handleTaskChange(index, e)}
-                                        required
                                     />
                                     <select
                                         name="status"
@@ -338,7 +342,6 @@ export default function CreateAudit() {
                                         onChange={(e) => handleTaskChange(index, e)}
                                     >
                                         <option value="pending">Pending</option>
-                                        <option value="ongoing">Ongoing</option>
                                         <option value="completed">Completed</option>
                                     </select>
                                     {task.status === "completed" && (
@@ -347,32 +350,23 @@ export default function CreateAudit() {
                                             name="completionDate"
                                             value={task.completionDate}
                                             onChange={(e) => handleTaskChange(index, e)}
-                                            placeholder="Completion Date"
-                                            min={audit.startDate}
-                                            max={audit.endDate}
                                         />
                                     )}
-                                    <button
-                                        type="button"
-                                        onClick={() => removeTask(index)}
-                                        disabled={tasks.length <= 1}
-                                    >
+                                    <button type="button" onClick={() => removeTask(index)}>
                                         <FaTrash />
                                     </button>
                                 </div>
                             ))}
-                            {tasks.length < 5 && (
-                                <button type="button" onClick={addTask}>
-                                    <FaPlus /> Add Task
-                                </button>
-                            )}
+                            <button type="button" onClick={addTask}>
+                                <FaPlus /> Add Task
+                            </button>
                         </div>
                     </div>
 
                     {/* Submit */}
-                    <div className="form-actions">
-                        <button type="submit" disabled={loading}>
-                            <FaSave /> {loading ? "Creating..." : "Create Audit"}
+                    <div className="form-buttons">
+                        <button type="submit" className="btn-submit">
+                            <FaSave /> Save
                         </button>
                     </div>
                 </form>

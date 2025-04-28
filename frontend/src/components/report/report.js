@@ -3,7 +3,32 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { FaChevronLeft, FaFilePdf, FaSpinner, FaTimes } from 'react-icons/fa';
 import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
 import './report.css';
+const cap_status_map = {
+  "pending": 2,
+  "ongoing": 1,
+  "completed": 0
+};
 
+const nc_type_map = {
+  "non_existant": 0,
+  "minor": 1,
+  "major": 2
+};
+
+const audit_category_map = {
+  "Software Licensing": 0,
+  "Operational": 1,
+  "Application": 2,
+  "IT Governance": 3,
+  "System": 4,
+  "Network": 5,
+  "Compliance": 6,
+  "Risk Based": 7,
+  "Data Privacy": 8,
+  "Cloud Security": 9,
+  "Security": 10,
+  "Disaster Recovery": 11
+};
 const ReportPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -62,109 +87,198 @@ const ReportPage = () => {
     }
   };
   
-  const generateReport = () => {
+  const generateReport = async () => {
+    console.log("🔥 generateReport() called");
     setShowReportPanel(true);
     setIsGenerating(true);
-    setReportContent('');
-
-    const summary = `
-AUDIT REPORT
-============
-
-Audit Type: ${auditDetails?.type || 'N/A'}
-Status: ${auditDetails?.status || 'N/A'}
-Audit Period: ${formatDate(auditDetails?.startDate)} to ${formatDate(auditDetails?.endDate)}
-Auditor: ${auditDetails?.createdBy.name || 'N/A'}
-\n
-Tasks:
-${Array.isArray(auditDetails?.tasks) && auditDetails.tasks.length > 0 
-  ? auditDetails.tasks.map((task, idx) =>
-      `  ${idx + 1}. ${task.task} - ${task.status} - completed: ${formatDate(task.completionDate)}`
-    ).join('\n')
-  : '  No tasks listed.'}
-
-
-
-Overview:
-
-\n
-Overview:
-This report summarizes the key findings identified during the audit. \n The outcomes have been categorized into Non-Conformities (NC), Opportunities for Improvement (OFI), Strengths, and Sensitive Points.
-
-Findings Breakdown:
-- Total Outcomes: ${outcomes.length}
-- Non-Conformities: ${outcomes.filter(o => o.type === 'nc').length}
-- Opportunities for Improvement: ${outcomes.filter(o => o.type === 'ofi').length}
-- Strengths: ${outcomes.filter(o => o.type === 'strength').length}
-- Sensitive Points: ${outcomes.filter(o => o.type === 'sensitivepoint').length}
-
-
-DETAILED FINDINGS
-=================
-`;
-
-    const formattedOutcomes = outcomes.map((o, index) => {
-      let paragraph = `\n${index + 1}. [${o.type.toUpperCase()}]\n`;
-
-      if (o.type === 'strength') {
-        paragraph += `Strength Description: ${o.details.description || 'No details provided.'}\n`;
-      } else if (o.type === 'nc') {
-        paragraph += `Non-Conformity: ${o.details.type || 'N/A'}\n`;
-        paragraph += `Description: ${o.details.description || 'N/A'}\n`;
-        paragraph += `Root Cause: ${o.details.rootCause || 'N/A'}\n`;
-        paragraph += `Impacted Asset: ${o.details.impactedAsset || 'N/A'}\n`;
-        paragraph += `Preventive Action: ${o.details.preventiveAction || 'N/A'}\n`;
-        paragraph += `Corrective Action Plan:\n`;
-        paragraph += `Responsible: ${o.details.cap.responsible || 'N/A'}\n`;
-        paragraph += `Action: ${o.details.cap.action || 'N/A'}\n`;
-        paragraph += `Due Date: ${o.details.cap.dueDate || 'N/A'}\n`;
-        paragraph += `Status: ${o.details.cap.status || 'N/A'}\n`;
-        paragraph += `Effectiveness: ${o.details.cap.effectiveness || 'N/A'}\n`;
-        paragraph += `Completion Date: ${o.details.cap.completionDate || 'N/A'}\n`;
-
-      } else if (o.type === 'ofi') {
-        paragraph += `Description: ${o.details.description || 'No details provided.'}\n`;
-        paragraph += `Perspective: ${o.details.prespective || 'No details provided.'}\n`;
-        paragraph += `Impacted Asset: ${o.details.impactedAsset || 'No details provided.'}\n`;
-        paragraph += `Action: ${o.details.action || 'No details provided.'}\n`;
-      } else if (o.type === 'sensitivepoint') {
-        paragraph += `Sensitive Point Description: ${o.details.description || 'No details provided.'}\n`;
+    setReportContent("");
+  
+    // 1) Send prediction data to your ML API
+    const sendPredictionData = async () => {
+      console.log("→ sendPredictionData(): start");
+    
+      const auditTypeValue = audit_category_map[auditDetails?.type];
+      console.log("   auditTypeValue:", auditTypeValue);
+    
+      const ncOutcomes = outcomes.filter(o => o.type === "nc");
+      console.log("   ncOutcomes:", ncOutcomes);
+    
+      const predictionData = ncOutcomes.map(o => {
+        // Check if the cap and dueDate are valid
+        const dueDate = o.details.cap?.dueDate ? new Date(o.details.cap?.dueDate) : null;
+        const today = new Date();
+        let days_until_due = null;
+    
+        if (dueDate && !isNaN(dueDate)) {
+          days_until_due = Math.ceil((dueDate - today) / (1000 * 60 * 60 * 24));
+        } else {
+          // Handle the case where dueDate is missing or invalid
+          days_until_due = null;  // Or set it to 0 or a default value, based on your needs
+        }
+    
+        const entry = {
+          nc_type: nc_type_map[o.details.type?.toLowerCase()],
+          cap_status: o.details.cap 
+            ? (cap_status_map[o.details.cap?.status?.toLowerCase()] ?? 2) // Default to "pending" (2) if status is invalid or missing
+            : 2, // Ensure cap_status exists, defaulting to "pending" (2)
+          days_until_due,
+          audit_category: auditTypeValue,
+        };
+    
+        console.log("     mapped entry:", entry);
+    
+        return entry;
+      });
+    
+      console.log("   full predictionData payload:", predictionData);
+    
+      try {
+        console.log("   → fetching POST http://localhost:8000/predict");
+        const response = await fetch("http://localhost:8000/predict", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(predictionData),
+        });
+        console.log("   ← response status:", response.status);
+    
+        if (!response.ok) {
+          const text = await response.text();
+          console.error("   ✖ Non-2xx response:", response.status, text);
+          throw new Error(`Failed to get prediction: ${response.status}`);
+        }
+    
+        const json = await response.json();
+        console.log("   ← response JSON:", json);
+    
+        const { predictions } = json;
+        console.log("   parsed predictions:", predictions);
+    
+        ncOutcomes.forEach((nc, idx) => {
+          console.log(`     applying risk to outcome[${idx}]:`, predictions[idx]);
+          nc.details.risk = predictions[idx];
+        });
+    
+        return predictions;
+      } catch (err) {
+        console.error("   ❌ sendPredictionData error:", err);
+        return null;
       }
-
-      return paragraph;
-    }).join('\n');
-
+    };
+    
+  
+    const predictions = await sendPredictionData();
+    console.log("← sendPredictionData complete, predictions:", predictions);
+  
+    // 2) Build the report text
+    console.log("→ building summary and formattedOutcomes");
+    const summary = `
+  AUDIT REPORT
+  ===========
+  
+  Audit Type: ${auditDetails?.type || "N/A"}
+  Status: ${auditDetails?.status || "N/A"}
+  Audit Period: ${formatDate(auditDetails?.startDate)} to ${formatDate(auditDetails?.endDate)}
+  Auditor: ${auditDetails?.createdBy.name || "N/A"}
+  
+  Tasks:
+  ${Array.isArray(auditDetails?.tasks) && auditDetails.tasks.length > 0
+      ? auditDetails.tasks
+          .map((t, i) => `  ${i + 1}. ${t.task} - completed: ${formatDate(t.completionDate)}`)
+          .join("\n")
+      : "  No tasks listed."}
+  
+  Overview:
+  This report summarizes the key findings identified during the audit.
+  The outcomes have been categorized into Non-Conformities (NC), Opportunities for Improvement (OFI), Strengths, and Sensitive Points.
+  
+  Findings Breakdown:
+  - Total Outcomes: ${outcomes.length}
+  - Non-Conformities: ${outcomes.filter(o => o.type === "nc").length}
+  - Opportunities for Improvement: ${outcomes.filter(o => o.type === "ofi").length}
+  - Strengths: ${outcomes.filter(o => o.type === "strength").length}
+  - Sensitive Points: ${outcomes.filter(o => o.type === "sensitivepoint").length}
+  
+  
+  DETAILED FINDINGS
+  =================
+    `;
+    console.log("   summary built");
+  
+    const formattedOutcomes = outcomes
+      .map((o, idx) => {
+        let paragraph = `\n${idx + 1}. [${o.type.toUpperCase()}]\n`;
+        if (o.type === "nc") {
+          paragraph += `Non-Conformity: ${o.details.type || "N/A"}\n`;
+          paragraph += `Risk (Predicted): ${
+            typeof o.details.risk === "number" ? o.details.risk.toFixed(2) : "N/A"
+          }\n`;
+        } else {
+          paragraph += `Description: ${o.details.description || "N/A"}\n`;
+        }
+        return paragraph;
+      })
+      .join("\n");
+    console.log("   formattedOutcomes built");
+  
     const fullReportText = summary + formattedOutcomes;
-
-// Create a PDF
-const createPDF = async () => {
-  const pdfDoc = await PDFDocument.create();
-  let page = pdfDoc.addPage([600, 800]);  // Changed from const to let
-  const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
-  const { width, height } = page.getSize();
-
-  const lines = fullReportText.split('\n');
-  let y = height - 30;
-
-  lines.forEach(line => {
-    if (y < 40) {
-      page = pdfDoc.addPage([600, 800]);  // Reassigning is now allowed
-      y = height - 30;
-    }
-    page.drawText(line, { x: 50, y, size: 10, font, color: rgb(0, 0, 0) });
-    y -= 15;
-  });
-
-  const pdfBytes = await pdfDoc.save();
-  const blob = new Blob([pdfBytes], { type: 'application/pdf' });
-  saveReportToAudit(blob);  // Save the file to the backend
-  setIsGenerating(false);
-  setReportContent(fullReportText);
-};
-
-
-createPDF();
-  }
+    console.log("   fullReportText:", fullReportText);
+  
+    // 3) Generate and upload the PDF
+    const createPDF = async () => {
+      console.log("→ createPDF(): start");
+      const pdfDoc = await PDFDocument.create();
+      console.log("   PDFDocument created");
+      let page = pdfDoc.addPage([600, 800]);
+      const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+      const { height } = page.getSize();
+      const lines = fullReportText.split("\n");
+      let y = height - 30;
+  
+      for (const line of lines) {
+        if (y < 40) {
+          page = pdfDoc.addPage([600, 800]);
+          y = height - 30;
+        }
+        page.drawText(line, { x: 50, y, size: 10, font, color: rgb(0, 0, 0) });
+        y -= 15;
+      }
+      console.log("   PDF content drawn");
+  
+      const pdfBytes = await pdfDoc.save();
+      console.log("   PDFDocument saved, bytes length:", pdfBytes.byteLength);
+  
+      const blob = new Blob([pdfBytes], { type: "application/pdf" });
+      console.log("   Blob created");
+  
+      // Upload to your audit service
+      console.log("   → saving report to audit service");
+      await saveReportToAudit(blob);
+      console.log("   ← saveReportToAudit returned");
+  
+      // Auto-download in browser
+      console.log("   → triggering browser download");
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `Audit_Report_${id}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+      console.log("   ← download triggered");
+  
+      setIsGenerating(false);
+      console.log("   setIsGenerating(false)");
+      setReportContent(fullReportText);
+      console.log("   setReportContent done");
+    };
+  
+    await createPDF();
+    console.log("← createPDF() complete");
+  };
+  
+  
+  
 
   const handleDownloadPDF = async () => {
     const pdfDoc = await PDFDocument.create();
@@ -242,7 +356,10 @@ createPDF();
     URL.revokeObjectURL(url);
   };
   
-  
+
+
+
+  //fetch
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -276,6 +393,8 @@ createPDF();
     fetchData();
   }, [id]);
 
+
+//front
   if (isLoading) {
     return (
       <div className="report-loading-container">
@@ -296,7 +415,6 @@ createPDF();
       </div>
     );
   }
-
   return (
     <div className="compact-report-container">
       <div className="report-header">

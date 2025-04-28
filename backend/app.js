@@ -48,7 +48,7 @@ app.use("/api/strength", strengthRoutes);
 app.use("/api/ofi", ofiRoutes);
 app.use("/api/nonConformity", ncRoutes);
 app.use("/api/cap", capRoutes);
-app.use('/api/comments', commentRoutes);
+app.use('/api/comment', commentRoutes);
 
 app.use("/api/user", userRoutes);
 app.use("/api/actionLog", actionLogRoutes);
