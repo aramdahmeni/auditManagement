@@ -6,8 +6,9 @@ import {
   FaHistory,
   FaChevronRight,
   FaChevronDown,
-  FaFileAlt
-} from "react-icons/fa";
+  FaFileAlt,
+  FaBell
+} from "react-icons/fa"; // ajout de FaBell pour l'icône de notification
 import { Link, useLocation } from "react-router-dom";
 import "./sidebar.css";
 
@@ -17,6 +18,7 @@ export default function Sidebar() {
   const [isQuickAccessOpen, setQuickAccessOpen] = useState(true);
   const [isAuditMenuOpen, setAuditMenuOpen] = useState(true);
   const [isLogsMenuOpen, setLogsMenuOpen] = useState(false);
+  const [isNotificationsOpen, setNotificationsOpen] = useState(false); // Nouveau état pour Notifications
 
   const isActive = (path) => location.pathname === path;
 
@@ -85,6 +87,7 @@ export default function Sidebar() {
           )}
         </div>
 
+ 
         {/* Logs */}
         <div className="nav-section">
           <h3
@@ -107,6 +110,28 @@ export default function Sidebar() {
           )}
         </div>
       </nav>
+             {/* Notifications & Tracking */}
+             <div className="nav-section">
+          <h3
+            className="nav-title"
+            onClick={() => setNotificationsOpen(!isNotificationsOpen)}
+            style={{ cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "space-between" }}
+          >
+            <span>Notifications & Tracking</span>
+            {isNotificationsOpen ? <FaChevronDown /> : <FaChevronRight />}
+          </h3>
+          {isNotificationsOpen && (
+            <ul>
+              <li className={isActive("/notifications") ? "active" : ""}>
+                <Link to="/notifications" className="nav-link">
+                  <FaBell className="nav-icon" />
+                  <span>Notifications</span>
+                </Link>
+              </li>
+            </ul>
+          )}
+        </div>
+
 
       {/* Footer */}
       <div className="sidebar-footer">
