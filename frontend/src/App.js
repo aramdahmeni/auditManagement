@@ -10,7 +10,7 @@ import AddOutcome from "./components/addOutcome/addOutcome";
 import ReportPage from "./components/report/report";
 import ActionLogList from "./components/ActionLog/ActionLogList";
 import Notifications from "./components/Notifications/Notifications"; // Import de Notifications
-
+import AuditHistory from "./components/AuditHistory/AuditHistory";
 function App() {
   return (
     <Router>
@@ -18,14 +18,14 @@ function App() {
         <Sidebar />
         <div style={{ flex: 1, padding: '20px', backgroundColor: '#f5f5f5' }}>
           <Routes>
-            {/* Route par défaut */}
+           
             <Route index element={<Dashboard />} />
             
-            {/* Routes principales */}
+           
             <Route path="/" element={<Dashboard />} />
             <Route path="/dashboard" element={<Dashboard />} />
             
-            {/* Routes des audits */}
+            
             <Route path="/audits">
               <Route index element={<List />} />
               <Route path="new" element={<Create />} />
@@ -38,13 +38,13 @@ function App() {
                 <Route path="report" element={<ReportPage />} />
               </Route>
             </Route>
-            
-            {/* Autres routes */}
+
             <Route path="/calendar" element={<Calendar />} />
+            <Route path="/audit-history" element={<AuditHistory />} />
             <Route path="/action-logs" element={<ActionLogList />} />
             <Route path="/notifications" element={<Notifications />} /> {/* Route des notifications */}
             
-            {/* Route de fallback */}
+            
             <Route path="*" element={<div>404 - Page Not Found</div>} />
           </Routes>
         </div>
