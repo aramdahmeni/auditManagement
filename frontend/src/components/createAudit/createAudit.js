@@ -11,16 +11,13 @@ export default function CreateAudit() {
         startDate: "",
         endDate: "",
         status: "Pending",
-        report: null,
-        comments: []
+        report: null
     });
 
     const [tasks, setTasks] = useState([{ task: "", status: "pending", completionDate: "" }]);
-    const [newComment, setNewComment] = useState("");
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
 
-    // Date logic
     useEffect(() => {
         if (audit.startDate && audit.endDate) {
             const today = new Date();
@@ -44,31 +41,6 @@ export default function CreateAudit() {
     const handleChange = (e) => {
         const { name, value } = e.target;
         setAudit(prev => ({ ...prev, [name]: value }));
-    };
-
-    const addComment = () => {
-        const trimmed = newComment.trim();
-        if (trimmed.length < 5) {
-            setError("Comments must be at least 5 characters long.");
-            return;
-        }
-        if (
-            trimmed &&
-            !audit.comments.includes(trimmed) &&
-            audit.comments.length < 5
-        ) {
-            setAudit(prev => ({
-                ...prev,
-                comments: [...prev.comments, trimmed]
-            }));
-            setNewComment("");
-        }
-    };
-
-    const removeComment = (index) => {
-        const updated = [...audit.comments];
-        updated.splice(index, 1);
-        setAudit(prev => ({ ...prev, comments: updated }));
     };
 
     const addTask = () => {
@@ -135,13 +107,6 @@ export default function CreateAudit() {
             return;
         }
 
-        const trimmedComments = (audit.comments || []).map(c => {
-            return { 
-              comment: c.trim(), 
-              author: "67e94905ac5b7e235be0371f" // Use the same ID as createdBy
-            };
-          }).filter(c => c && c.comment.length > 0);
-
         setLoading(true);
         setError(null);
 
@@ -152,9 +117,8 @@ export default function CreateAudit() {
             formData.append("startDate", audit.startDate);
             formData.append("endDate", audit.endDate);
             formData.append("status", audit.status);
-            formData.append("createdBy", "67e94905ac5b7e235be0371f"); // keep your user ID
+            formData.append("createdBy", "67e94905ac5b7e235be0371f");
             formData.append("tasks", JSON.stringify(trimmedTasks));
-            formData.append("comments", JSON.stringify(trimmedComments));
 
             if (audit.report) {
                 formData.append("report", audit.report.file);
@@ -192,7 +156,6 @@ export default function CreateAudit() {
                     </button>
                 </div>
 
-                {/* Popup Error Message */}
                 {error && (
                     <div className="popup-error">
                         <div className="popup-error-message">{error}</div>
@@ -203,7 +166,6 @@ export default function CreateAudit() {
                 )}
 
                 <form onSubmit={handleSubmit} className="audit-form">
-                    {/* Audit Type */}
                     <div className="form-group">
                         <label>Audit Type</label>
                         <select
@@ -242,7 +204,6 @@ export default function CreateAudit() {
                         </select>
                     </div>
 
-                    {/* Objective */}
                     <div className="form-group">
                         <label>Objective</label>
                         <textarea
@@ -254,7 +215,6 @@ export default function CreateAudit() {
                         />
                     </div>
 
-                    {/* Dates */}
                     <div className="form-row">
                         <div className="form-group">
                             <label>Start Date</label>
@@ -279,7 +239,6 @@ export default function CreateAudit() {
                         </div>
                     </div>
 
-                    {/* Status */}
                     <div className="form-group">
                         <label>Status</label>
                         <select
@@ -295,35 +254,6 @@ export default function CreateAudit() {
                         </select>
                     </div>
 
-                    {/* Comments */}
-                    <div className="form-group">
-                        <label>Comments</label>
-                        <div className="comments-wrapper">
-                            {audit.comments.map((comment, index) => (
-                                <div key={index} className="comment-item">
-                                    <span>{comment}</span>
-                                    <button type="button" onClick={() => removeComment(index)}>
-                                        <FaTrash />
-                                    </button>
-                                </div>
-                            ))}
-                            {audit.comments.length < 5 && (
-                                <div className="comment-input-group">
-                                    <input
-                                        type="text"
-                                        value={newComment}
-                                        onChange={(e) => setNewComment(e.target.value)}
-                                        placeholder="Add comment"
-                                    />
-                                    <button type="button" onClick={addComment}>
-                                        <FaPlus /> Add
-                                    </button>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-
-                    {/* Tasks */}
                     <div className="form-group">
                         <label>Tasks</label>
                         <div className="tasks-container">
@@ -342,6 +272,7 @@ export default function CreateAudit() {
                                         onChange={(e) => handleTaskChange(index, e)}
                                     >
                                         <option value="pending">Pending</option>
+                                        <option value="ongoing">Ongoing</option>
                                         <option value="completed">Completed</option>
                                     </select>
                                     {task.status === "completed" && (
@@ -349,6 +280,8 @@ export default function CreateAudit() {
                                             type="date"
                                             name="completionDate"
                                             value={task.completionDate}
+                                            min={audit.startDate}
+                                            max={audit.endDate}
                                             onChange={(e) => handleTaskChange(index, e)}
                                         />
                                     )}
@@ -357,18 +290,17 @@ export default function CreateAudit() {
                                     </button>
                                 </div>
                             ))}
-                            <button type="button" onClick={addTask}>
-                                <FaPlus /> Add Task
-                            </button>
+                            {tasks.length < 5 && (
+                                <button type="button" onClick={addTask}>
+                                    <FaPlus /> Add Task
+                                </button>
+                            )}
                         </div>
                     </div>
 
-                    {/* Submit */}
-                    <div className="form-buttons">
-                        <button type="submit" className="btn-submit">
-                            <FaSave /> Save
-                        </button>
-                    </div>
+                    <button type="submit" className="btn-save">
+                        <FaSave /> Create Audit
+                    </button>
                 </form>
             </div>
         </div>

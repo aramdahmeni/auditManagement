@@ -2,12 +2,11 @@ const Audit = require("../models/audit");
 const Task = require('../models/task');
 const Comment = require('../models/comment'); 
 const upload = require("../middleware/multerConfig");
+const actionLog = require("../models/actionLog");
 
 exports.createAudit = async (req, res) => {
   try {
     const { type, objective, startDate, endDate, status, createdBy } = req.body;
-
-    // === Parse tasks ===
     let parsedTasks = [];
     try {
       parsedTasks = JSON.parse(req.body.tasks || "[]");
@@ -15,32 +14,15 @@ exports.createAudit = async (req, res) => {
     } catch {
       return res.status(400).json({ error: "Invalid tasks format" });
     }
-
-    // === Parse comments ===
-    let parsedComments = [];
-    try {
-      parsedComments = JSON.parse(req.body.comments || "[]");
-      if (!Array.isArray(parsedComments)) throw new Error();
-    } catch {
-      return res.status(400).json({ error: "Invalid comments format" });
-    }
-
-    // === Create audit ===
-    const newAudit = new Audit({
-      type,
-      objective,
-      startDate,
-      endDate,
-      status,
-      createdBy,
-      report: req.file ? req.file.filename : null,
-      tasks: [],
-      comments: [],
-    });
+    const newAudit = new Audit({ type,objective,startDate,endDate,status,createdBy, report: req.file ? req.file.filename : null,
+      tasks: [],comments: [],});
 
     const savedAudit = await newAudit.save();
-
-    // === Save tasks ===
+      await new actionLog({
+        auditId: savedAudit._id,
+        userId: savedAudit.createdBy,
+        action: 'create',
+      }).save();
     const taskPromises = parsedTasks.map(taskData =>
       new Task({
         auditID: savedAudit._id,
@@ -54,31 +36,8 @@ exports.createAudit = async (req, res) => {
     );
     const savedTasks = await Promise.all(taskPromises);
     savedAudit.tasks = savedTasks.map(task => task._id);
-
-    // === Save comments (with validation) ===
-    const commentIds = [];
-    for (const commentData of parsedComments) {
-      if (!commentData.comment || !commentData.author) {
-        console.warn("Skipping invalid comment:", commentData);
-        continue;
-      }
-      try {
-        const newComment = new Comment({
-          comment: commentData.comment,
-          author: commentData.author,
-          auditId: savedAudit._id,  // Match the schema field name
-        });
-        const saved = await newComment.save();
-        commentIds.push(saved._id);
-      } catch (err) {
-        console.error("Failed to save comment:", err.message);
-      }
-    }
-
-    savedAudit.comments = commentIds;
     await savedAudit.save();
 
-    // === Populate result ===
     const result = await Audit.findById(savedAudit._id)
       .populate("tasks")
       .populate("createdBy", "name email")
@@ -90,33 +49,25 @@ exports.createAudit = async (req, res) => {
         },
       });
 
-    console.log("Created Audit with populated comments:", result.comments);
-
     res.status(201).json(result);
   } catch (error) {
     console.error("Audit creation error:", error);
-    res.status(500).json({
-      error: "Audit creation failed",
-      details: process.env.NODE_ENV === "development" ? error.message : undefined,
-    });
+    res.status(500).json({ error: "Audit creation failed" });
   }
 };
 
-// Update task status and set completion date if task is completed
+
+// update task 
 exports.updateTask = async (req, res) => {
   try {
     const { taskId, status, completionDate } = req.body;
-
-    // Get the associated audit for the task
     const task = await Task.findById(taskId).populate("auditID");
     if (!task) {
       return res.status(404).json({ message: "Task not found" });
     }
-
     if (task.auditID.status === "pending" && status !== task.status) {
       return res.status(400).json({ message: "Cannot update task status when audit status is pending" });
     }
-
     if (status === "completed" && !completionDate) {
       return res.status(400).json({ message: "Completion date is required when task is completed" });
     }
@@ -190,7 +141,11 @@ exports.updateAudit = async (req, res) => {
     };
 
     await Audit.findByIdAndUpdate(req.params.id, updateData);
-
+    await new actionLog({
+      auditId: req.params.id,
+      userId: audit.createdBy,
+      action: 'update',
+    }).save();
     const fresh = await Audit.findById(req.params.id)
       .populate("createdBy", "name email")
       .populate("tasks", "task status completionDate createdAt updatedAt")
@@ -213,6 +168,11 @@ exports.deleteAudit = async (req, res) => {
     await Comment.deleteMany({ audit: audit._id });
     await Task.deleteMany({ audit: audit._id });
     await Audit.findByIdAndDelete(req.params.id);
+    await new actionLog({
+      auditId: req.params.id,
+      userId: audit.createdBy,
+      action: 'delete',
+    }).save();
     res.json({ message: "Audit deleted successfully" });
   } catch (error) {
     res.status(500).json({ error: error.message });

@@ -1,14 +1,11 @@
-
 const express = require('express');
-const {
-  getActionLogs,
-  getAuditTypes
-} = require('../controllers/actionLogController');
-
 const router = express.Router();
+const actionLogController = require("../controllers/actionLogController")
 
-router.get('/', getActionLogs);
-router.get('/types', getAuditTypes);
+
+router.get('/', actionLogController.getAllLogs);
+router.get('/audit/:auditId', actionLogController.getLogsByAuditId);
+router.get('/user/:userId', actionLogController.getLogsByUserId);
+
 
 module.exports = router;
-

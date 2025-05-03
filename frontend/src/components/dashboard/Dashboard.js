@@ -1,4 +1,3 @@
-// src/components/Dashboard.jsx
 import React, { useEffect, useState } from "react";
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, Legend,
@@ -56,7 +55,6 @@ export default function Dashboard() {
         const pending = pendingList.length;
         const completionRate = total ? ((completed / total) * 100).toFixed(1) : 0;
 
-        // Avg Audit Duration (days)
         const durations = completedList.map(a => {
           const sd = new Date(a.startDate);
           const ed = new Date(a.endDate);
@@ -64,7 +62,6 @@ export default function Dashboard() {
         });
         const averageAuditDuration = +avg(durations).toFixed(1);
 
-        // On-time completion rate
         const onTimeCount = completedList.filter(a =>
           new Date(a.updatedAt) <= new Date(a.endDate)
         ).length;
@@ -72,17 +69,14 @@ export default function Dashboard() {
           ? +((onTimeCount / completed) * 100).toFixed(1)
           : 0;
 
-        // Overdue audits
         const overdueAudits = audits.filter(a =>
           a.status.toLowerCase() !== "completed" &&
           new Date(a.endDate) < now
         ).length;
 
-        // Avg tasks per audit
         const totalTasks = audits.reduce((sum, a) => sum + (a.tasks?.length || 0), 0);
         const avgTasksPerAudit = total ? +(totalTasks / total).toFixed(1) : 0;
 
-        // Avg task resolution time (days)
         const allTasks = audits.flatMap(a => a.tasks || []);
         const completedTasks = allTasks.filter(t =>
           t.status.toLowerCase() === "completed" && t.completionDate
@@ -94,35 +88,35 @@ export default function Dashboard() {
         });
         const avgTaskResolutionTime = +avg(taskResTimes).toFixed(1);
 
-        // Outcome calculations
         const allOutcomes = audits.flatMap(a => a.outcomes || []);
         const outcomeCounts = {};
         allOutcomes.forEach(o => {
-          outcomeCounts[o] = (outcomeCounts[o] || 0) + 1;
+          const type = o.type?.toLowerCase();
+          if (type) {
+            outcomeCounts[type] = (outcomeCounts[type] || 0) + 1;
+          }
         });
 
         const outcomeEntries = Object.entries(outcomeCounts);
         const averageOutcomes = audits.length ? (allOutcomes.length / audits.length).toFixed(1) : 0;
-        
-        let mostCommonOutcome = { name: 'No data', count: 0 };
+
+        let mostCommonOutcome = { type: 'No data', count: 0 };
         if (outcomeEntries.length) {
-          const [name, count] = outcomeEntries.reduce((a, b) => a[1] > b[1] ? a : b);
-          mostCommonOutcome = { name, count };
+          const [type, count] = outcomeEntries.reduce((a, b) => a[1] > b[1] ? a : b);
+          mostCommonOutcome = { type, count };
         }
 
-        const outcomeDistribution = outcomeEntries.map(([name, count]) => ({
-          name,
+        const outcomeDistribution = outcomeEntries.map(([type, count]) => ({
+          type,
           count
         }));
 
-        // Pie data
         const pie = [
           { name: "Completed", value: completed },
           { name: "Ongoing", value: ongoing },
           { name: "Pending", value: pending }
         ];
 
-        // Bar data: by createdAt month
         const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", 
                           "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
         const countsByMonth = Array(12).fill(0);
@@ -132,7 +126,6 @@ export default function Dashboard() {
         });
         const bar = countsByMonth.map((c, i) => ({ month: monthNames[i], audits: c }));
 
-        // Recent activities
         const recent = [...audits]
           .sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt))
           .slice(0, 5);
@@ -182,18 +175,10 @@ export default function Dashboard() {
 
   const cardData = [
     { icon: <FiActivity/>, label: "Total Audits", value: stats.totalAudits },
-    { icon: <FiCheckCircle/>, label: "Completed", value: stats.completedAudits },
-    { icon: <FiClock/>, label: "Pending", value: stats.pendingAudits },
-    { icon: <FiAlertCircle/>, label: "Ongoing", value: stats.ongoingAudits },
-    { icon: <FiTrendingUp/>, label: "Completion Rate", value: `${stats.completionRate}%` },
     { icon: <FiCalendar/>, label: "Avg Duration (d)", value: stats.averageAuditDuration },
-    { icon: <FiCheckCircle/>, label: "On-Time Rate", value: `${stats.onTimeCompletionRate}%` },
     { icon: <FiAlertCircle/>, label: "Overdue Audits", value: stats.overdueAudits },
     { icon: <FiLayers/>, label: "Avg Tasks/Audit", value: stats.avgTasksPerAudit },
-    { icon: <FiTime/>, label: "Avg Resolution (d)", value: stats.avgTaskResolutionTime },
-    { icon: <FiBarChart2 />, label: "Avg Outcomes/Audit", value: stats.averageOutcomes },
-    { icon: <FiAward />, label: "Most Common Outcome", 
-      value: `${stats.mostCommonOutcome.name} (${stats.mostCommonOutcome.count})` }
+    { icon: <FiBarChart2 />, label: "Avg Outcomes/Audit", value: stats.averageOutcomes }
   ];
 
   const cardVariants = { hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } };
@@ -277,14 +262,14 @@ export default function Dashboard() {
 
         <motion.div className="chart"
           variants={chartVariants} initial="hidden" animate="visible"
-          transition={{ delay: 0.4 }}>
-          <h3><FiPieChart /> Outcome Distribution</h3>
+          transition={{ delay: 0.3 }}>
+          <h3><FiPieChart/> Outcome Distribution</h3>
           <ResponsiveContainer width="100%" height={260}>
             <BarChart data={stats.outcomeDistribution}>
-              <XAxis dataKey="name" />
+              <XAxis dataKey="type" />
               <YAxis allowDecimals={false} />
-              <Tooltip formatter={(v) => [`${v} occurrences`, "Count"]} />
-              <Bar dataKey="count" name="Occurrences" fill="#3182ce" />
+              <Tooltip formatter={(v) => [`${v} outcomes`, "Count"]} />
+              <Bar dataKey="count" fill="#6366f1" />
             </BarChart>
           </ResponsiveContainer>
         </motion.div>

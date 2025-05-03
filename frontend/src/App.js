@@ -44,10 +44,8 @@ function App() {
             
             {/* Autres routes */}
             <Route path="/calendar" element={<Calendar />} />
-            <Route path="/action-logs" element={<ActionLogList />} />
+            <Route path="/actionLogList" element={<ActionLogList />} />
             
-            {/* Route de fallback */}
-            <Route path="*" element={<div>404 - Page Not Found</div>} />
           </Routes>
         </div>
       </div>

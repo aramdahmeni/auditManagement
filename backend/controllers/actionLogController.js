@@ -1,55 +1,42 @@
-const ActionLog = require('../models/actionLog');
-const mongoose = require('mongoose');
+const actionLog = require('../models/actionLog');
 
-exports.getActionLogs = async (req, res) => {
+// Get all logs (optional: with filters for admin)
+exports.getAllLogs = async (req, res) => {
   try {
-    const { page = 1, limit = 10, type, action, startDate, endDate } = req.query;
-    
-    const query = {};
-    if (type) query.type = type;
-    if (action) query.action = action;
-    if (startDate && endDate) {
-      query.createdAt = {
-        $gte: new Date(startDate),
-        $lte: new Date(endDate)
-      };
-    }
+    const logs = await actionLog.find()
+      .populate('userId', 'name email') 
+      .populate('auditId', 'type status') 
+      .sort({ timestamp: -1 });
 
-    const [logs, total] = await Promise.all([
-      ActionLog.find(query)
-        .sort({ createdAt: -1 })
-        .skip((page - 1) * limit)
-        .limit(parseInt(limit))
-        .populate('userID', 'name email')
-        .populate('auditID', 'title'),
-      ActionLog.countDocuments(query)
-    ]);
-
-    res.json({
-      success: true,
-      data: logs,
-      pagination: {
-        page: parseInt(page),
-        limit: parseInt(limit),
-        total
-      }
-    });
+    res.status(200).json(logs);
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      error: 'Server error'
-    });
+    res.status(500).json({ error: 'Failed to retrieve audit logs' });
   }
 };
 
-exports.getAuditTypes = async (req, res) => {
+// Get logs for a specific audit
+exports.getLogsByAuditId = async (req, res) => {
   try {
-    const types = await ActionLog.distinct('type');
-    res.json(types);
+    const logs = await actionLog.find({ auditId: req.params.auditId })
+      .populate('userId', 'name')
+      .sort({ timestamp: -1 });
+
+    res.status(200).json(logs);
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      error: 'Server error'
-    });
+    res.status(500).json({ error: 'Failed to retrieve logs for this audit' });
   }
 };
+
+// Get logs by user
+exports.getLogsByUserId = async (req, res) => {
+  try {
+    const logs = await actionLog.find({ userId: req.params.userId })
+      .populate('auditId', 'type')
+      .sort({ timestamp: -1 });
+
+    res.status(200).json(logs);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to retrieve logs for this user' });
+  }
+};
+

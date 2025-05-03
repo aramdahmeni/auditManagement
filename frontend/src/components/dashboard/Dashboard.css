@@ -1,147 +1,141 @@
-/* Dashboard.css - Professional Minimalist */
+/* General Layout */
 .dashboard-container {
-  padding: 2rem;
-  max-width: 1800px;
-  margin: 0 auto;
-  color: #2d3748;
-  font-family: 'Segoe UI', 'Helvetica Neue', sans-serif;
+  padding: 1.5rem;
+  font-family: 'Poppins', sans-serif;
+  background-color: #f9fafb;
+  min-height: 100vh;
+  color: #111827;
+  margin-left: 225px; 
+  margin-top: 0px;
+  width: calc(100% - 250px); /* Subtract sidebar width */
 }
 
 .dashboard-title {
-  font-size: 2rem;
-  margin-bottom: 2rem;
-  font-weight: 500;
-  color: #1a365d;
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  color: #1f2937;
 }
 
-/* Cards Grid */
+/* Cards */
 .cards-container {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 1.25rem;
-  margin-bottom: 2.5rem;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
 }
 
 .card {
-  background: #ffffff;
-  border-radius: 8px;
-  padding: 1.25rem;
-  border: 1px solid #e2e8f0;
+  background-color: #ffffff;
+  border-radius: 0.75rem;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+  padding: 1rem;
   text-align: center;
-  transition: all 0.2s ease;
+  transition: transform 0.2s ease;
 }
 
 .card:hover {
-  border-color: #cbd5e0;
+  transform: translateY(-3px);
 }
 
 .card-icon {
   font-size: 1.5rem;
-  margin-bottom: 0.75rem;
-  color: #4a5568;
+  margin-bottom: 0.5rem;
+  color: #3b82f6;
 }
 
 .card h2 {
-  font-size: 1.75rem;
-  margin: 0.5rem 0;
-  color: #1a202c;
-  font-weight: 500;
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0.2rem 0;
+  color: #111827;
 }
 
 .card p {
-  margin: 0;
-  color: #718096;
-  font-size: 0.9rem;
+  color: #6b7280;
+  font-size: 0.85rem;
 }
 
-/* Progress Bar Section */
+/* Progress Bar */
 .progress-bar-section {
+  margin-bottom: 1.5rem;
+  padding: 1rem;
   background: #ffffff;
-  border-radius: 8px;
-  padding: 1.25rem;
-  margin-bottom: 2.5rem;
-  border: 1px solid #e2e8f0;
+  border-radius: 0.75rem;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.05);
 }
 
 .progress-bar-section h2 {
+  font-size: 1.1rem;
+  margin-bottom: 0.75rem;
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  margin-top: 0;
-  margin-bottom: 1.25rem;
-  font-size: 1.1rem;
-  font-weight: 500;
+  color: #1f2937;
 }
 
 .progress-container {
-  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
 .progress-label {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 0.5rem;
   font-size: 0.85rem;
-  color: #4a5568;
+  color: #374151;
 }
 
 .progress-bar {
-  height: 8px;
-  background: #edf2f7;
-  border-radius: 4px;
+  background-color: #e5e7eb;
+  border-radius: 0.75rem;
   overflow: hidden;
+  height: 12px;
 }
 
 .progress-fill {
+  background: linear-gradient(to right, #3b82f6, #6366f1);
   height: 100%;
-  background: #3182ce;
-  border-radius: 4px;
+  border-radius: 0.75rem 0 0 0.75rem;
 }
 
-/* Charts Container */
+/* Charts */
 .charts-container {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1.5rem;
-  margin-bottom: 2.5rem;
-}
-
-@media (max-width: 1024px) {
-  .charts-container {
-    grid-template-columns: 1fr;
-  }
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
 }
 
 .chart {
   background: #ffffff;
-  border-radius: 8px;
-  padding: 1.25rem;
-  border: 1px solid #e2e8f0;
+  padding: 1rem;
+  border-radius: 0.75rem;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.05);
 }
 
 .chart h3 {
+  font-size: 1rem;
+  margin-bottom: 0.75rem;
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  margin-top: 0;
-  margin-bottom: 1.25rem;
-  font-size: 1.1rem;
-  font-weight: 500;
+  color: #1f2937;
 }
 
 /* Latest Activities */
 .latest-activities {
   background: #ffffff;
-  border-radius: 8px;
-  padding: 1.25rem;
-  border: 1px solid #e2e8f0;
+  padding: 1rem;
+  border-radius: 0.75rem;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.05);
 }
 
 .latest-activities h3 {
-  margin-top: 0;
-  margin-bottom: 1.25rem;
   font-size: 1.1rem;
-  font-weight: 500;
+  margin-bottom: 0.75rem;
+  color: #1f2937;
 }
 
 .latest-activities ul {
@@ -151,9 +145,10 @@
 }
 
 .latest-activities li {
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #e5e7eb;
   display: flex;
-  padding: 0.75rem 0;
-  border-bottom: 1px solid #edf2f7;
+  flex-direction: column;
 }
 
 .latest-activities li:last-child {
@@ -161,56 +156,39 @@
 }
 
 .activity-date {
-  min-width: 160px;
-  color: #718096;
-  font-size: 0.8rem;
+  font-size: 0.75rem;
+  color: #6b7280;
 }
 
 .activity-text {
-  flex: 1;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
 }
 
 /* Loading and Error States */
 .loading-spinner {
   display: flex;
   justify-content: center;
-  margin: 2rem 0;
+  align-items: center;
+  height: 40px;
 }
 
 .spinner {
-  width: 40px;
-  height: 40px;
-  border: 4px solid #edf2f7;
-  border-top-color: #3182ce;
+  width: 20px;
+  height: 20px;
+  border: 2px solid #3b82f6;
+  border-top: 2px solid transparent;
   border-radius: 50%;
-  animation: spin 1s linear infinite;
+  animation: spin 0.8s linear infinite;
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .error-message {
-  color: #e53e3e;
-  background: #fff5f5;
-  padding: 1rem;
-  border-radius: 6px;
-  border-left: 3px solid #e53e3e;
+  color: #ef4444;
+  font-weight: 500;
   font-size: 0.9rem;
-}
-
-/* Recharts Overrides for Minimalist Style */
-.recharts-tooltip {
-  background: #ffffff !important;
-  border: 1px solid #e2e8f0 !important;
-  border-radius: 4px !important;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05) !important;
-  padding: 0.5rem !important;
-  font-size: 0.8rem !important;
-}
-
-.recharts-legend-item-text {
-  font-size: 0.8rem !important;
-  color: #4a5568 !important;
 }

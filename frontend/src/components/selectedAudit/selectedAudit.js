@@ -232,36 +232,74 @@ export default function SelectedAudit() {
   };
 
   // Comment management
-  const handleAddComment = () => {
-    if (!newComment.trim()) {
+  const handleAddComment = async () => {
+    const trimmedComment = newComment.trim();
+  
+    if (!trimmedComment) {
       toast.warning("Please enter a comment");
       return;
     }
-    
-    const newCommentObj = {
-      _id: `temp-comment-${Date.now()}`,
-      text: newComment.trim(),
-      createdAt: new Date().toISOString(),
-      createdBy: "Current User" // Replace with actual user from your auth system
-    };
-
-    setEditedAudit(prev => ({
-      ...prev,
-      comments: [...prev.comments, newCommentObj]
-    }));
-    setNewComment("");
-    toast.success("Comment added successfully");
+  
+    try {
+      const response = await fetch("http://localhost:5000/api/comments/add", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          auditId: id,  // Ensure this is the correct audit ID
+          comment: trimmedComment,  // The comment text
+          author: "67e94905ac5b7e235be0371f",  // Hardcoded user ID (replace with actual user if needed)
+        }),
+      });
+  
+      const responseData = await response.json();  // Capture the response data
+  
+      if (!response.ok) {
+        console.error('Error response:', responseData);  // Log any errors returned from the backend
+        throw new Error("Failed to add comment");
+      }
+  
+      // Update the state with the new comment on successful addition
+      setEditedAudit((prev) => ({
+        ...prev,
+        comments: [...prev.comments, responseData]
+      }));
+  
+      setNewComment("");  // Clear the comment input
+      toast.success("Comment added successfully");
+    } catch (error) {
+      console.error("Add comment error:", error);
+      toast.error("Failed to add comment");
+    }
   };
-
-  const handleDeleteComment = (commentId) => {
-    setEditedAudit(prev => ({
-      ...prev,
-      comments: prev.comments.filter(c => c._id !== commentId)
-    }));
-    toast.success("Comment deleted successfully");
+  
+  const handleDeleteComment = async (commentId) => {
+    try {
+      const response = await fetch(`http://localhost:5000/api/comments/${commentId}`, {
+        method: 'DELETE',
+      });
+  
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.message || "Failed to delete comment");
+      }
+  
+      // Remove the comment from local state
+      setEditedAudit(prev => ({
+        ...prev,
+        comments: prev.comments.filter(c => c._id !== commentId)
+      }));
+  
+      toast.success("Comment deleted successfully");
+    } catch (error) {
+      console.error("Error deleting comment:", error);
+      toast.error(error.message || "An error occurred while deleting the comment");
+    }
   };
+  
 
-  // Audit CRUD operations
+  // Audit managemnt
   const handleEdit = () => {
     setIsEditing(true);
   };
@@ -276,7 +314,7 @@ export default function SelectedAudit() {
         return;
       }
 
-      if (editedAudit.status === "Completed" && !allTasksCompleted) {
+      if (editedAudit.status === "Completed" && !allTasksCompleted && audit.status !="Completed") {
         setValidationError("All tasks must be completed before marking the audit as completed.");
         setIsDialogOpen(true);
         return;
@@ -570,7 +608,7 @@ export default function SelectedAudit() {
               name="type"
               value={editedAudit.type}
               onChange={handleChange}
-              readOnly={!isEditing}
+              readOnly
               className={!isEditing ? "read-only" : ""}
             />
           </div>
@@ -667,60 +705,6 @@ export default function SelectedAudit() {
             {!allTasksCompleted && editedAudit.status === "Completed" && isEditing && (
               <p className="warning-text">All tasks must be completed to mark audit as completed</p>
             )}
-          </div>
-        </div>
-
-        {/* Comments Section */}
-        <div className="form-row-full">
-          <div className="form-group">
-            <label>Comments</label>
-            {isEditing && (
-              <div className="comment-input-container">
-                <textarea
-                  value={newComment}
-                  onChange={(e) => setNewComment(e.target.value)}
-                  placeholder="Add a new comment..."
-                  rows="2"
-                  className="comment-input"
-                />
-                <button
-                  className="btn btn-add-comment"
-                  onClick={handleAddComment}
-                  disabled={!newComment.trim()}
-                >
-                  Add Comment
-                </button>
-              </div>
-            )}
-            
-            <div className="comments-list">
-              {editedAudit.comments.length > 0 ? (
-                editedAudit.comments.map((comment) => (
-                  <div key={comment._id} className="comment-item">
-                    <div className="comment-content">
-                      <p className="comment-text">{comment.text}</p>
-                      <div className="comment-meta">
-                        <span className="comment-author">{comment.createdBy}</span>
-                        <span className="comment-date">
-                          {new Date(comment.createdAt).toLocaleString()}
-                        </span>
-                      </div>
-                    </div>
-                    {isEditing && (
-                      <button
-                        className="btn-icon btn-delete-comment"
-                        onClick={() => handleDeleteComment(comment._id)}
-                        title="Delete comment"
-                      >
-                        <FaTrash />
-                      </button>
-                    )}
-                  </div>
-                ))
-              ) : (
-                <div className="no-comments">No comments yet</div>
-              )}
-            </div>
           </div>
         </div>
       </div>
@@ -841,6 +825,61 @@ export default function SelectedAudit() {
           <div className="no-tasks">No tasks assigned to this audit</div>
         )}
       </div>
+
+      <div className="comments-section">
+  <div className="comments-header">
+    <h3>Comments</h3>
+    {isEditing && (
+      <div className="add-comment-container">
+        <textarea
+          value={newComment}
+          onChange={(e) => setNewComment(e.target.value)}
+          placeholder="Add a new comment..."
+          rows="2"
+          className="form-input"
+        />
+        <button 
+          className="btn btn-add"
+          onClick={handleAddComment}
+          disabled={!newComment.trim()}
+        >
+          Add Comment
+        </button>
+      </div>
+    )}
+  </div>
+
+  {editedAudit.comments.length > 0 ? (
+    <div className="comment-list">
+      {editedAudit.comments.map((comment) => (
+        <div key={comment._id} className="comment-item">
+          <div className="comment-content">
+            <p className="comment-text">{comment.comment}</p>
+            <div className="comment-meta">
+              <span className="comment-author">{comment.createdBy}</span>
+              <span className="comment-date">
+                {new Date(comment.createdAt).toLocaleString()}
+              </span>
+            </div>
+          </div>
+          {isEditing && (
+            <div className="comment-actions">
+              <button
+                className="btn-icon btn-delete"
+                onClick={() => handleDeleteComment(comment._id)}
+                title="Delete comment"
+              >
+                <FaTrash />
+              </button>
+            </div>
+          )}
+        </div>
+      ))}
+    </div>
+  ) : (
+    <div className="no-comments">No comments yet</div>
+  )}
+</div>
 
       {/* Dialogs */}
       <div className={`dialog-overlay ${isDialogOpen || deleteDialogOpen ? 'active' : ''}`}>
