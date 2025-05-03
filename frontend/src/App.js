@@ -9,26 +9,23 @@ import OutcomeList from './components/outcomes/OutcomesList';
 import AddOutcome from "./components/addOutcome/addOutcome";
 import ReportPage from "./components/report/report";
 import ActionLogList from "./components/ActionLog/ActionLogList";
-
+import Notifications from "./components/Notifications/Notifications"; // Import de Notifications
+import AuditHistory from "./components/AuditHistory/AuditHistory";
 function App() {
   return (
     <Router>
       <div style={{ display: 'flex', minHeight: '100vh' }}>
         <Sidebar />
-        <div style={{ 
-          flex: 1, 
-          padding: '20px',
-          backgroundColor: '#f5f5f5'
-        }}>
+        <div style={{ flex: 1, padding: '20px', backgroundColor: '#f5f5f5' }}>
           <Routes>
-            {/* Route par défaut */}
+           
             <Route index element={<Dashboard />} />
             
-            {/* Routes principales */}
+           
             <Route path="/" element={<Dashboard />} />
             <Route path="/dashboard" element={<Dashboard />} />
             
-            {/* Routes des audits */}
+            
             <Route path="/audits">
               <Route index element={<List />} />
               <Route path="new" element={<Create />} />
@@ -41,8 +38,7 @@ function App() {
                 <Route path="report" element={<ReportPage />} />
               </Route>
             </Route>
-            
-            {/* Autres routes */}
+
             <Route path="/calendar" element={<Calendar />} />
             <Route path="/actionLogList" element={<ActionLogList />} />
             
